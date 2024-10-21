@@ -52,9 +52,7 @@ pip install --no-index bitsandbytes
 
 ## GPU RAM Calculation
 
-On the Beluga cluster, each node provides 64GB of GPU RAM. 
--By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory.
--Llama 3-8B is listed to require 16Gb of GPU memory.
+On the Beluga cluster, each node provides 64GB of GPU RAM. By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory. Llama 3-8B is listed to require 16Gb of GPU memory.
 
 
 ## Running on the Cluster
