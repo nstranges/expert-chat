@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=01:00:00
-#SBATCH --gpus-per-node=2
-#SBATCH --mem=32000M               # memory per node
+#SBATCH --time=02:00:00
+#SBATCH --gpus-per-node=4
+#SBATCH --mem=64000M
 #SBATCH --mail-user=nstrang2@uwo.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 

@@ -2,13 +2,6 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import json
 
-# specify how to quantize the model
-quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16
-)
-
 # Parent class for this type
 class ExpertChat:
     # Super class constructor
@@ -17,6 +10,10 @@ class ExpertChat:
         self.tokenizer = tokenizer
         self.name = name
 
+        # Setting the padding token if needed
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+
         # The messages that the chatbot takes. The original message saves the system prompt
         self.original_message = [
             {
@@ -24,38 +21,61 @@ class ExpertChat:
                 "content": "You are in a discussion with an expert on the topic you are discussing."+ 
                 "You will be asked questions by the expert and you will answer to the best of your abilities."+
                 "Once you have answered the question you will ask a follow up question about the topic."+
-                "Your goal is to convince the expert you are an expert yourself.",
+                "Your goal is to convince the expert you are an expert yourself. ",
             }]
 
         # COPY of original
         self.messages = self.original_message.copy()
+
+    # Generates a response from the model
+    def _gen_response(self, input):
+        # Tokenize the chat
+        tokenized_chat = self.tokenizer.apply_chat_template(
+            input, 
+            tokenize=True, 
+            add_generation_prompt=True, 
+            return_tensors="pt", 
+            padding=True).to("cuda")
+        
+        # Ignoring padding
+        # Create attention mask if not present
+        if 'attention_mask' not in tokenized_chat:
+            attention_mask = (tokenized_chat['input_ids'] != self.tokenizer.pad_token_id).long()
+        else:
+            attention_mask = tokenized_chat['attention_mask']
+
+        # Generate output
+        outputs = self.model.generate(
+            input_ids=tokenized_chat['input_ids'],
+            attention_mask=attention_mask,
+            max_new_tokens=128,
+            do_sample=True)
+
+        # Decode the generated tokens 
+        decoded = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+
+        return decoded
 
     # Different system prompt to start discussion
     def create_new_topic(self):
         prompt = [{"role": "system", "content": "You are an assistant that creates intellectual topics. Keep the topic to a sentence maximum in length."},
                   {"role": "user", "content": "Create a topic discussion."}]
         
-        # Tokenize the chat and get response. Can adjust temperature here.
-        tokenized_chat = self.tokenizer.apply_chat_template(prompt, tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda")
-        outputs = self.model.generate(tokenized_chat, max_new_tokens=128, do_sample=True) 
-        topic = self.tokenizer.batch_decode(outputs)[0]
+        topic = self._gen_response(prompt)
 
         return topic
     
     # Sets the topic of the conversation
     def set_topic(self, topic):
-        prompt = {"role": "system", "content": "The discussion topic is: " + topic}
-        self.messages.append(prompt)
+        topic_str = "The discussion topic is: " + topic
+        self.messages[0]["content"] += topic_str
 
     # Initalizing the first conversation
     def start_conversation(self):
-        prompt = [{"role": "user", "content": "Start the conversation by asking a question on the topic."}]
+        prompt = {"role": "user", "content": "Start the conversation by asking a question on the topic."}
         self.messages.append(prompt)
 
-        # Tokenize the chat and get response. Can adjust temperature here.
-        tokenized_chat = self.tokenizer.apply_chat_template(self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda")
-        outputs = self.model.generate(tokenized_chat, max_new_tokens=128, do_sample=True) 
-        question = self.tokenizer.batch_decode(outputs)[0]
+        question = self._gen_response(self.messages)
 
         # Save question
         question_prompt = {"role": "assistant", "content": question}
@@ -69,15 +89,14 @@ class ExpertChat:
 
     # Giving the other expert a rating
     def rate_the_expert(self):
-        prompt = [{"role": "user", "content": "Choose any criteria and rate me as an expert. Tell me if you believe I am a person or a chatbot. Explain all reasoning."}]
+        prompt = {"role": "user", "content": "Choose any criteria and rate me as an expert. Tell me if you believe I am a person or a chatbot. Explain all reasoning."}
         self.messages.append(prompt)
+        
+        rating = self._gen_response(self.messages)
 
-        # Tokenize the chat and get response. Can adjust temperature here.
-        tokenized_chat = self.tokenizer.apply_chat_template(self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda")
-        outputs = self.model.generate(tokenized_chat, max_new_tokens=128, do_sample=True) 
-        rating = self.tokenizer.batch_decode(outputs)[0]
-
-        return rating
+        # Save rating
+        rating_prompt = {"role": "assistant", "content": rating}
+        self.messages.append(rating_prompt)
     
     # Saving the conversation for future analysis
     def save_conversation(self, saving_path, conv_num):
@@ -91,10 +110,7 @@ class ExpertChat:
         prompt = {"role": "user", "content": new_message}
         self.messages.append(prompt)
 
-        # Tokenize the chat and get response. Can adjust temperature here.
-        tokenized_chat = self.tokenizer.apply_chat_template(self.messages, tokenize=True, add_generation_prompt=True, return_tensors="pt").to("cuda")
-        outputs = self.model.generate(tokenized_chat, max_new_tokens=128, do_sample=True) 
-        response = self.tokenizer.batch_decode(outputs)[0]
+        response = self._gen_response(self.messages)
 
         # Save response
         response_prompt = {"role": "assistant", "content": response}
@@ -102,18 +118,29 @@ class ExpertChat:
 
         return response
     
+    # Prints the current convo with roles
+    def print_convo(self):
+        print("\n" + self.name)
+        print(json.dumps(self.messages, indent=4))
+    
+# specify how to quantize the model
+cur_quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16
+)
+
 # Mixtral model class for ease of use
 class Mixtral(ExpertChat):
     def __init__(self):
         model_name = "Mixtral"
-        model_id = "/home/nstrang2/projects/def-lenck/nstrang2/Models/Mixtral-8x7B-Instruct-v0.1"
+        model_id = "/home/nstrang2/scratch/Models/Mixtral-8x7B-Instruct-v0.1"
 
-        # Init the mixtral model. Using flash attention and half precision model
+        # Init the mixtral model. Half precision model. Flash attention only for A100 servers
         model = AutoModelForCausalLM.from_pretrained(
             model_id, 
             torch_dtype=torch.float16,
-            quantization_config=True,
-            attn_implementation="flash_attention_2",
+            quantization_config=cur_quantization_config,
             device_map="auto"
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -124,9 +151,9 @@ class Mixtral(ExpertChat):
 class Llama(ExpertChat):
     def __init__(self):
         model_name = "Llama"
-        model_id = "/home/nstrang2/projects/def-lenck/nstrang2/Models/Meta-Llama-3-8B-Instruct"
+        model_id = "/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct"
 
-        # Init the Llama model. Using flash attention and half precision model
+        # Init the Llama model. Half precision model.
         model = AutoModelForCausalLM.from_pretrained(
             model_id, 
             torch_dtype=torch.float16,
@@ -154,19 +181,26 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
 
         # Choose and set topic
         topic = first.create_new_topic()
+        print("Topic" + topic)
         first.set_topic(topic)
         second.set_topic(topic)
 
         # Starting convo
         response = first.start_conversation()
+        print("Convo start" + response)
+        first.print_convo()
 
         # Amount of questions/answers
         for j in range(total_exchanges): 
             # Alternate speaker
             if ((j+1) % 2) == 0:
-                response = second.give_message(response)
-            else:
                 response = first.give_message(response)
+                print("First message return" + response)
+                first.print_convo()
+            else:
+                response = second.give_message(response)
+                print("Second message return" + response)
+                second.print_convo()
 
         # Rate the other expert after the convo
         first.rate_the_expert()
@@ -175,6 +209,10 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
         # Save convo for each
         first.save_conversation(saving_path, i)
         second.save_conversation(saving_path, i)
+
+        # Reset convo for each
+        first.reset_conversation()
+        second.reset_conversation()
         
 
 topics = 10

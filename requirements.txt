@@ -4,7 +4,6 @@ certifi==2024.8.30+computecanada
 charset_normalizer==3.4.0+computecanada
 einops==0.8.0+computecanada
 filelock==3.16.1+computecanada
-flash_attn==2.5.7+computecanada
 fsspec==2024.9.0+computecanada
 huggingface_hub==0.26.0+computecanada
 idna==3.10+computecanada

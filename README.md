@@ -40,19 +40,19 @@ All dependencies are listed in the `requirements.txt`. The key libraries include
 
 - Huggingface `transformers`
 - `Pytorch`
-- Flash Attention  
+- Flash Attention (Only on A100 GPUs, not included in current implementation)
 
 To install the required packages:
 ```bash
 pip install --no-index transformers
 pip install --no-index torch
-pip install -U flash-attn --no-build-isolation
 pip install --no-index bitsandbytes
+pip install -U flash-attn --no-build-isolation (Only on A100 GPUs)
 ```
 
 ## GPU RAM Calculation
 
-On the Beluga cluster, each node provides 64GB of GPU RAM. By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory. Llama 3-8B is listed to require 16Gb of GPU memory.
+On the Beluga cluster, each node provides 64GB of GPU RAM, 16GB in each GPU. By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory. Llama 3-8B is listed to require 16Gb of GPU memory. Running both models requires 43GB. I found that there was just under the required amount of memory with 3 GPUs. I requested 4 GPUs for a total of 64GB GPU RAM.
 
 
 ## Running on the Cluster
