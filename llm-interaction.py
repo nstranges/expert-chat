@@ -51,7 +51,7 @@ class ExpertChat:
 
         # Decode tokens
         decoded_text = self.tokenizer.batch_decode(
-            outputs[:, input_length],
+            outputs[:, input_length:],
             skip_special_tokens=True
         )[0]
 
