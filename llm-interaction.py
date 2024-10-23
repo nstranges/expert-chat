@@ -21,7 +21,7 @@ class ExpertChat:
                 "content": "You are in a discussion with an expert on the topic you are discussing."+ 
                 "You will be asked questions by the expert and you will answer to the best of your abilities."+
                 "Once you have answered the question you will ask a follow up question about the topic."+
-                "Your goal is to convince the expert you are an expert yourself. ",
+                "Your goal is to convince the expert you are an expert yourself, be convincing and talk like a human expert would. ",
             }]
 
         # COPY of original
@@ -45,7 +45,7 @@ class ExpertChat:
         outputs = self.model.generate(
             input_ids=tokenized_input,
             pad_token_id=self.tokenizer.pad_token_id,
-            max_new_tokens=128,
+            max_new_tokens=512,
             do_sample=True
         )
 
@@ -60,7 +60,7 @@ class ExpertChat:
     # Different system prompt to start discussion
     def create_new_topic(self):
         prompt = [{"role": "system", "content": "You are an assistant that creates intellectual topics. Keep the topic to a sentence maximum in length."},
-                  {"role": "user", "content": "Create a topic discussion."}]
+                  {"role": "user", "content": "Create a topic discussion. Please make the topic have depth and require an expert's opinion."}]
         
         topic = self._gen_response(prompt)
 
@@ -191,17 +191,14 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
 
         # Starting convo
         response = first.start_conversation()
-        first.print_convo()
 
         # Amount of questions/answers
         for j in range(total_exchanges): 
             # Alternate speaker
             if ((j+1) % 2) == 0:
                 response = first.give_message(response)
-                first.print_convo()
             else:
                 response = second.give_message(response)
-                second.print_convo()
 
         # Rate the other expert after the convo
         first.rate_the_expert()
@@ -216,8 +213,8 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
         second.reset_conversation()
         
 
-topics = 10
-exchanges = 20
-output_path = '/home/nstrang2/projects/def-lenck/nstrang2/Conversations'
+topics = 5
+exchanges = 10
+output_path = '/home/nstrang2/projects/def-lenck/nstrang2/Conversations/'
 
 conversation_loop(topics, exchanges, output_path)
