@@ -62,3 +62,7 @@ To run the models on a cluster, use the following command:
 sbatch llm-job.sh
 ```
 Make sure all file paths in the script are correctly set for the cluster's file system.
+
+## Note on Generation
+
+I am using contrastive search as seen in this [blog post](https://huggingface.co/docs/transformers/en/generation_strategies). The parameters are automatically set to defaults but can be changed for tasks like topic generation.

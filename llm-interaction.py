@@ -1,6 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 import torch
 import json
+import copy
 
 # Parent class for this type
 class ExpertChat:
@@ -24,8 +25,8 @@ class ExpertChat:
                 "Your goal is to convince the expert you are an expert yourself, be convincing and talk like a human expert would. ",
             }]
 
-        # COPY of original
-        self.messages = self.original_message.copy()
+        # DEEP COPY of original
+        self.messages = copy.deepcopy(self.original_message)
 
     # Generates a response from the model. Optional inputting of contrastive search parameters
     def _gen_response(self, input, contrastive_alpha=0.6, contrastive_k=4):
@@ -46,7 +47,7 @@ class ExpertChat:
         outputs = self.model.generate(
             input_ids=tokenized_input,
             pad_token_id=self.tokenizer.pad_token_id,
-            max_new_tokens=512,
+            max_new_tokens=256,
             penalty_alpha=contrastive_alpha,
             top_k=contrastive_k
         )
@@ -62,7 +63,7 @@ class ExpertChat:
     # Different system prompt to start discussion
     def create_new_topic(self):
         prompt = [{"role": "system", "content": "You are an assistant that creates intellectual topics. Keep the topic to a sentence maximum in length."},
-                  {"role": "user", "content": "Create a topic discussion. Please make the topic have depth and require an expert's opinion."}]
+                  {"role": "user", "content": "Create a topic discussion."}]
         
         # Increasing randomness in the contrastive search
         topic = self._gen_response(prompt, contrastive_alpha=0.85)
@@ -89,7 +90,7 @@ class ExpertChat:
 
     # Resetting conversation history
     def reset_conversation(self):
-        self.messages = self.original_message.copy()
+        self.messages = copy.deepcopy(self.original_message)
 
     # Giving the other expert a rating
     def rate_the_expert(self):
