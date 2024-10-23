@@ -27,8 +27,8 @@ class ExpertChat:
         # COPY of original
         self.messages = self.original_message.copy()
 
-    # Generates a response from the model
-    def _gen_response(self, input):
+    # Generates a response from the model. Optional inputting of contrastive search parameters
+    def _gen_response(self, input, contrastive_alpha=0.6, contrastive_k=4):
         # Tokenize input
         tokenized_input = self.tokenizer.apply_chat_template(
             input,
@@ -41,12 +41,14 @@ class ExpertChat:
         # Input length
         input_length = tokenized_input.shape[1]
 
-        # Generate new tokens
+        # Generate new tokens using contrastive search. 
+        # Add do sampling without this. This search is not sampled.
         outputs = self.model.generate(
             input_ids=tokenized_input,
             pad_token_id=self.tokenizer.pad_token_id,
             max_new_tokens=512,
-            do_sample=True
+            penalty_alpha=contrastive_alpha,
+            top_k=contrastive_k
         )
 
         # Decode tokens
@@ -62,7 +64,8 @@ class ExpertChat:
         prompt = [{"role": "system", "content": "You are an assistant that creates intellectual topics. Keep the topic to a sentence maximum in length."},
                   {"role": "user", "content": "Create a topic discussion. Please make the topic have depth and require an expert's opinion."}]
         
-        topic = self._gen_response(prompt)
+        # Increasing randomness in the contrastive search
+        topic = self._gen_response(prompt, contrastive_alpha=0.85)
 
         return topic
     
