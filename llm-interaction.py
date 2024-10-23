@@ -29,32 +29,33 @@ class ExpertChat:
 
     # Generates a response from the model
     def _gen_response(self, input):
-        # Tokenize the chat
-        tokenized_chat = self.tokenizer.apply_chat_template(
-            input, 
-            tokenize=True, 
-            add_generation_prompt=True, 
-            return_tensors="pt", 
-            padding=True).to("cuda")
-        
-        # Ignoring padding
-        # Create attention mask if not present
-        if 'attention_mask' not in tokenized_chat:
-            attention_mask = (tokenized_chat['input_ids'] != self.tokenizer.pad_token_id).long()
-        else:
-            attention_mask = tokenized_chat['attention_mask']
+        # Tokenize input
+        tokenized_input = self.tokenizer.apply_chat_template(
+            input,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            padding=True
+        ).to("cuda")
 
-        # Generate output
+        # Input length
+        input_length = tokenized_input.shape[1]
+
+        # Generate new tokens
         outputs = self.model.generate(
-            input_ids=tokenized_chat['input_ids'],
-            attention_mask=attention_mask,
+            input_ids=tokenized_input,
+            pad_token_id=self.tokenizer.pad_token_id,
             max_new_tokens=128,
-            do_sample=True)
+            do_sample=True
+        )
 
-        # Decode the generated tokens 
-        decoded = self.tokenizer.batch_decode(outputs, skip_special_tokens=True)[0]
+        # Decode tokens
+        decoded_text = self.tokenizer.batch_decode(
+            outputs[:, input_length],
+            skip_special_tokens=True
+        )[0]
 
-        return decoded
+        return decoded_text
 
     # Different system prompt to start discussion
     def create_new_topic(self):
@@ -138,12 +139,12 @@ class Mixtral(ExpertChat):
 
         # Init the mixtral model. Half precision model. Flash attention only for A100 servers
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, 
+            model_id,
             torch_dtype=torch.float16,
             quantization_config=cur_quantization_config,
             device_map="auto"
         )
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left")
 
         super().__init__(model, tokenizer, model_name)
 
@@ -155,16 +156,20 @@ class Llama(ExpertChat):
 
         # Init the Llama model. Half precision model.
         model = AutoModelForCausalLM.from_pretrained(
-            model_id, 
+            model_id,
             torch_dtype=torch.float16,
             device_map="auto"
         )
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
+        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left")
 
         super().__init__(model, tokenizer, model_name)
 
 # Create a conversation loop and play the conversations
 def conversation_loop(total_topics, total_exchanges, saving_path):
+    # Loading the models into GPU RAM
+    llama = Llama()
+    mixtral = Mixtral()
+
     # Different topics
     for i in range(total_topics):
         first = None
@@ -173,21 +178,19 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
 
         # Alternate topic choosers
         if ((i+1) % 2) == 0:
-            first = Mixtral()
-            second = Llama()
+            first = mixtral
+            second = llama
         else:
-            first = Llama()
-            second = Mixtral()
+            first = llama
+            second = mixtral
 
         # Choose and set topic
         topic = first.create_new_topic()
-        print("Topic" + topic)
         first.set_topic(topic)
         second.set_topic(topic)
 
         # Starting convo
         response = first.start_conversation()
-        print("Convo start" + response)
         first.print_convo()
 
         # Amount of questions/answers
@@ -195,11 +198,9 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
             # Alternate speaker
             if ((j+1) % 2) == 0:
                 response = first.give_message(response)
-                print("First message return" + response)
                 first.print_convo()
             else:
                 response = second.give_message(response)
-                print("Second message return" + response)
                 second.print_convo()
 
         # Rate the other expert after the convo
