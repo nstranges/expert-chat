@@ -26,5 +26,16 @@ EOF
 # activate only on main node                                                               
 source $SLURM_TMPDIR/env/bin/activate;
 
+# Putting the models onto the compute node
+cd $SLURM_TMPDIR
+#mkdir -p $SLURM_TMPDIR/Models
+cp /home/nstrang2/scratch/Models/ $SLURM_TMPDIR/
+# cp /home/nstrang2/scratch/Models.zip $SLURM_TMPDIR/
+# unzip -q $SLURM_TMPDIR/Models.zip -d $SLURM_TMPDIR/
+# ls -R $SLURM_TMPDIR/Models/
+# echo "Model files successfully unzipped to $SLURM_TMPDIR/Models/"
+pwd > current_directory.txt
+cp ./current_directory.txt ~/projects/def-lenck/lenck/nstrang2/Code/
+
 # srun exports the current env, which contains $VIRTUAL_ENV and $PATH variables
 srun python /home/nstrang2/projects/def-lenck/nstrang2/Code/llm-interaction.py;

@@ -2,10 +2,12 @@
 Studying the interaction of LLM models when discussing different topics. Using open-source models in the Hugging Face Transformers library.
 
 ## Overview
-The goal of this project is to analyze the interaction between different AI models and explore ways to fine-tune them for more expert-like communication. The approach is inspired by a bidirectional GAN (Generative Adversarial Network) concept, where each model attempts to convince the other that they are human experts rather than AI. After several interactions, the models rate each other across multiple categories, and these ratings are used to fine-tune them, improving their ability to communicate convincingly. Reinforcement Learning with Human Feedback (RLHF) will be used to further refine this process.
+The goal of this project is to analyze the interaction between different AI models and explore ways to fine-tune them for more expert-like communication. The approach is inspired by a bidirectional GAN (Generative Adversarial Network) concept, where each model attempts to convince the other that they are human experts rather than AI. After several interactions, the models rate each other across multiple categories, and these ratings are used to fine-tune them, improving their ability to communicate convincingly. 
+
+Ratings are first determined by a numerical score from 1-10 (10 being high). The second rating metric is a WIM (What Is Missing) response from the judging model. The WIM response will be compared to the actor model's response using cosine similarity to "rate" the knowledge content. The idea is that the actor will try to maximize the knowledge content given in its response. [Online DPO](https://huggingface.co/papers/2402.04792) (Direct Preference Optimization) is used to fine-tune the models based on these rewards.
 
 ## Approach
-I created a custom ExpertChat parent class that allows the seamless interaction between two LLMs. Each model has its own child class for model specific parameters. A conversation loops gives a straightforward method to create a topic, create interaction between the models, and rate each model after the conversation. RLHF will be implemented in future iterations of this code.
+I created a custom ExpertChat parent class that allows the seamless interaction between two LLMs. Each model has its own child class for model specific parameters. A conversation loops gives a straightforward method to create a topic, create interaction between the models, and rate each model after the conversation. Using the TRL toolkit for training. 
 
 ## Models
 
@@ -33,6 +35,8 @@ To work with the models in this project, ensure you're using `git lfs` (Git Larg
        ```bash
        git clone https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct
        ```
+
+  Note: The job is written to use zip files to speed up GPU load time on the cluster. Make sure to use -r flag.
 
 ## Required Libraries
 
@@ -65,8 +69,17 @@ Make sure all file paths in the script are correctly set for the cluster's file 
 
 ## Note on Generation
 
-I am using contrastive search as seen in this [blog post](https://huggingface.co/docs/transformers/en/generation_strategies). The parameters are automatically set to defaults but can be changed for tasks like topic generation.
+I am using contrastive search as seen in this [blog post](https://huggingface.co/docs/transformers/en/generation_strategies). The parameters are automatically set to defaults but can be changed for tasks like topic generation. Alternatively, high temperature sampling can produce better results in terms of training.
 
-## RLHF
+## Online DPO
 
-To stay within the Hugging Face toolset, I will be using the TRL library found [here](https://huggingface.co/docs/trl/index). I hope to build RLHF feedback capabilites using LLM feedback only.
+To stay within the Hugging Face toolset, I will be using the TRL library found [here](https://huggingface.co/docs/trl/index).
+
+## Helpful and Similar Papers
+
+[RLAIF vs. RLHF: Scaling Reinforcement Learning from Human Feedback with AI Feedback](https://arxiv.org/pdf/2309.00267)
+[ETA-REWARDING LANGUAGE MODELS: Self-Improving Alignment with LLM-as-a-Meta-Judge](https://arxiv.org/pdf/2407.19594)
+[Exchange-of-Thought: Enhancing Large Language Model Capabilities through Cross-Model Communication](https://arxiv.org/pdf/2312.01823)
+[Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](https://arxiv.org/pdf/2306.05685)
+[Self-Rewarding Language Models](https://arxiv.org/pdf/2401.10020)
+[WEAK-TO-STRONG GENERALIZATION: ELICITING STRONG CAPABILITIES WITH WEAK SUPERVISION](https://cdn.openai.com/papers/weak-to-strong-generalization.pdf)
