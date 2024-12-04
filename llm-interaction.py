@@ -1,56 +1,4 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import torch
-import ExpertChat
-
-# Gets the working directory of the HPC
-def get_working_dir():
-    with open('current_directory.txt', 'r') as file:
-        path = file.read()
-
-    return path
-
-# specify how to quantize the model
-cur_quantization_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16
-)
-
-# Mixtral model class for ease of use
-class Mixtral(ExpertChat):
-    def __init__(self):
-        model_name = "Mixtral"
-        model_path = get_working_dir() + '/Models/'
-        model_id = model_path + 'Mixtral-8x7B-Instruct-v0.1'
-
-        # Init the mixtral model. Half precision model. Flash attention only for A100 servers
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16,
-            quantization_config=cur_quantization_config,
-            device_map="auto"
-        )
-        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
-
-        super().__init__(model, tokenizer, model_name)
-
-# Llama model class for ease of use
-class Llama(ExpertChat):
-    def __init__(self):
-        model_name = "Llama"
-        model_path = get_working_dir() + '/Models/'
-        model_id = model_path + 'Meta-Llama-3-8B-Instruct'
-
-        # Init the Llama model. Half precision model.
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16,
-            quantization_config=cur_quantization_config,
-            device_map="auto"
-        )
-        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
-
-        super().__init__(model, tokenizer, model_name)
+from ExpertChat import Llama, Mixtral
 
 # Create a conversation loop and play the conversations
 def conversation_loop(total_topics, total_exchanges, saving_path):
@@ -101,9 +49,8 @@ def conversation_loop(total_topics, total_exchanges, saving_path):
         second.reset_conversation()
         
 
-topics = 5
-exchanges = 10
+topics = 1
+exchanges = 2
 output_path = '/home/nstrang2/projects/def-lenck/nstrang2/Conversations/'
 
-model_path = get_working_dir() + '/Models/'
 conversation_loop(topics, exchanges, output_path)

@@ -1,5 +1,19 @@
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers.pytorch_utils import cosine_similarity
+import torch
 import copy
 import json
+import numpy as np
+
+# Gets the working directory of the HPC
+def get_working_dir():
+    try:
+        with open('current_directory.txt', 'r') as file:
+            path = file.read()
+    except FileNotFoundError:
+        path = '/home/nstrang2/scratch'
+
+    return path
 
 # Parent class for this type
 class ExpertChat:
@@ -105,7 +119,7 @@ class ExpertChat:
         self.messages = copy.deepcopy(self.original_message)
 
     # Giving the other expert a rating
-    def rate_the_expert(self):
+    def rate_the_expert(self, single_prompt=None, single_response=None):
         prompt = {"role": "user", "content": "Rate my conversation and debating skills. Consider factors such as the knowledge, understanding "+
                     "depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as"+
                     "possible. The goal is to evaluate the knowledge on this topic. After providing your explanation, please rate the response on a scale of 1 to 10 "+
@@ -115,10 +129,25 @@ class ExpertChat:
                     "with existing provisions in the Criminal Code or explicitly explain the legal basis for claims that it might indirectly affect abortion "+
                     "rights. It also omits specific examples of cases or statistics that were cited to justify or oppose the bill.]]]\""}
         
-        tmp_messages = copy.deepcopy(self.messages)
-        tmp_messages.append(prompt)
-        
-        rating = self._gen_response(tmp_messages)
+        # Changing chat or judge mode
+        if single_prompt and single_response:
+            # Formatting as a single judge
+            prompt["role"] = "system"
+            tmp_messages = [prompt]
+            formatted_prompt = {"role": "assistant", "content": single_prompt}
+            tmp_messages.append(formatted_prompt)
+            
+            # Set up prompt situation
+            formatted_response = {"role": "user", "content": single_response}
+            tmp_messages.append(formatted_response)
+
+            rating = self._gen_response(tmp_messages)
+
+        else:    
+            tmp_messages = copy.deepcopy(self.messages)
+            tmp_messages.append(prompt)
+            
+            rating = self._gen_response(tmp_messages)
 
         return rating
 
@@ -150,3 +179,81 @@ class ExpertChat:
     def print_convo(self):
         print("\n" + self.name)
         print(json.dumps(self.messages, indent=4))
+
+    # Get cosine similarity as a rating
+    def calculate_cos_similarity(self, response, wim):
+        # Generate embeddings for WIM and the original response
+        wim_embedding = self._generate_embedding(wim)
+        response_embedding = self._generate_embedding(response)
+
+        # Mean pooling on the embeddings
+        wim_embedding_mean = wim_embedding.mean(dim=1).squeeze(0)
+        response_embedding_mean = response_embedding.mean(dim=1).squeeze(0)
+
+        # Compute cosine similarity
+        similarity = cosine_similarity(wim_embedding_mean.unsqueeze(0), response_embedding_mean.unsqueeze(0))[0].item()
+
+        return similarity
+    
+    # Gets the embedding from the model in text
+    def _generate_embedding(self, text):
+        # Tokenize input
+        tokenized_input = self.tokenizer.apply_chat_template(
+            text,
+            tokenize=True,
+            add_generation_prompt=True,
+            return_tensors="pt",
+            padding=True
+        ).to("cuda")
+
+        # Get embeddings from the model
+        with torch.no_grad():
+            output = self.model(**tokenized_input)
+
+        embeddings = output.last_hidden_state
+
+        return embeddings
+        
+
+# specify how to quantize the model
+cur_quantization_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.float16
+)
+
+# Mixtral model class for ease of use
+class Mixtral(ExpertChat):
+    def __init__(self):
+        model_name = "Mixtral"
+        model_path = get_working_dir() + '/Models/'
+        model_id = model_path + 'Mixtral-8x7B-Instruct-v0.1'
+
+        # Init the mixtral model. Half precision model. Flash attention only for A100 servers
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16,
+            quantization_config=cur_quantization_config,
+            device_map="auto"
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
+
+        super().__init__(model, tokenizer, model_name)
+
+# Llama model class for ease of use
+class Llama(ExpertChat):
+    def __init__(self):
+        model_name = "Llama"
+        model_path = get_working_dir() + '/Models/'
+        model_id = model_path + 'Meta-Llama-3-8B-Instruct'
+
+        # Init the Llama model. Half precision model.
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16,
+            quantization_config=cur_quantization_config,
+            device_map="auto"
+        )
+        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
+
+        super().__init__(model, tokenizer, model_name)
