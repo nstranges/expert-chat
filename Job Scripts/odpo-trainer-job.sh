@@ -13,7 +13,7 @@ while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
 done
 
 module load python/3.11
-module load gcc arrow/x.y.z
+module load gcc arrow/15.0.0
 
 # create the virtual environment on each node : 
 srun --ntasks $SLURM_NNODES --tasks-per-node=1 bash << EOF
