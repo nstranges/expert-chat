@@ -79,7 +79,7 @@ sbatch llm-interaction-job.sh
 
 To run the Online DPO trainer on a cluster, use the following command:
 ```bash
-sbatch expert-trainer-job.sh
+sbatch odpo-trainer-job.sh
 ```
 
 Make sure all file paths in the script are correctly set for the cluster's file system.
