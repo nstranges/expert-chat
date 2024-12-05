@@ -36,6 +36,13 @@ To work with the models in this project, ensure you're using `git lfs` (Git Larg
        git clone https://huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct
        ```
 
+    - **all-mpnet-base-v2 (Sentence Transformer)**  
+     - URL: [all-mpnet-base-v2](https://huggingface.co/sentence-transformers/all-mpnet-base-v2/tree/main)  
+     - Clone:  
+       ```bash
+       clone https://huggingface.co/sentence-transformers/all-mpnet-base-v2
+       ```
+
   Note: The job is written to use zip files to speed up GPU load time on the cluster. Make sure to use -r flag.
 
 ## Required Libraries
@@ -45,26 +52,36 @@ All dependencies are listed in the `requirements.txt`. The key libraries include
 - Huggingface `transformers`
 - `Pytorch`
 - Flash Attention (Only on A100 GPUs, not included in current implementation)
+- Huggingface `trl`
+- Sentence Transformers
 
 To install the required packages:
 ```bash
 pip install --no-index transformers
 pip install --no-index torch
 pip install --no-index bitsandbytes
-pip install -U flash-attn --no-build-isolation (Only on A100 GPUs)
+pip install --no-index -U flash-attn --no-build-isolation (Only on A100 GPUs)
+pip install --no-index -U sentence-transformers
+pip install --no-index trl
 ```
 
 ## GPU RAM Calculation
 
-On the Beluga cluster, each node provides 64GB of GPU RAM, 16GB in each GPU. By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory. Llama 3-8B is listed to require 16Gb of GPU memory. Running both models requires 43GB. I found that there was just under the required amount of memory with 3 GPUs. I requested 4 GPUs for a total of 64GB GPU RAM.
+On the Beluga cluster, each node provides 64GB of GPU RAM, 16GB in each GPU. By using quantization with 4-bit parameters, the Mixtral model will require approximately 27GB of GPU memory. Llama 3-8B is listed to require 16Gb of GPU memory. Running both models requires 43GB. I found that there was just under the required amount of memory with 3 GPUs. I requested 4 GPUs for a total of 64GB GPU RAM. RAM is also required for the sentence transformer model but 64GB should still be sufficient.
 
 
 ## Running on the Cluster
 
 To run the models on a cluster, use the following command:
 ```bash
-sbatch llm-job.sh
+sbatch llm-interaction-job.sh
 ```
+
+To run the Online DPO trainer on a cluster, use the following command:
+```bash
+sbatch expert-trainer-job.sh
+```
+
 Make sure all file paths in the script are correctly set for the cluster's file system.
 
 ## Note on Generation
@@ -74,6 +91,10 @@ I am using contrastive search as seen in this [blog post](https://huggingface.co
 ## Online DPO
 
 To stay within the Hugging Face toolset, I will be using the TRL library found [here](https://huggingface.co/docs/trl/index).
+
+## Sentence Transformers
+
+Producing useful embeddings is important to actually tell the model what knowledge is missing. I am using [Sentence Transformers](https://huggingface.co/sentence-transformers) to extract the useful embeddings. These are usually used for semantic search and is more useful than the standard LLM tokenizers.
 
 ## Helpful and Similar Papers
 

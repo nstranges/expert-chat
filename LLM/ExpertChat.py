@@ -1,9 +1,8 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from transformers.pytorch_utils import cosine_similarity
+from sentence_transformers import SentenceTransformer
 import torch
 import copy
 import json
-import numpy as np
 
 # Gets the working directory of the HPC
 def get_working_dir():
@@ -18,10 +17,17 @@ def get_working_dir():
 # Parent class for this type
 class ExpertChat:
     # Super class constructor
-    def __init__(self, model, tokenizer, name):
+    def __init__(self, model, tokenizer, name, rating):
         self.model = model
         self.tokenizer = tokenizer
         self.name = name
+
+        # Include the sentence transformer
+        if rating:
+            # Load the embedding model
+            self.embedding_model = SentenceTransformer(get_working_dir() + '/Models/all-mpnet-base-v2')
+        else:
+            self.embedding_model = None
 
         # Setting the padding token if needed
         if self.tokenizer.pad_token_id is None:
@@ -35,7 +41,7 @@ class ExpertChat:
                 "You will be asked questions by the expert and you will answer to the best of your abilities."+
                 "Once you have answered the question you will ask a follow up question about the topic."+
                 "Your goal is to convince the expert you are an expert yourself, be convincing and talk like a human expert would."+
-                "Explain all answers STEP BY STEP",
+                "Explain all answers STEP BY STEP.",
             }]
 
         # DEEP COPY of original
@@ -186,34 +192,23 @@ class ExpertChat:
         wim_embedding = self._generate_embedding(wim)
         response_embedding = self._generate_embedding(response)
 
-        # Mean pooling on the embeddings
-        wim_embedding_mean = wim_embedding.mean(dim=1).squeeze(0)
-        response_embedding_mean = response_embedding.mean(dim=1).squeeze(0)
-
-        # Compute cosine similarity
-        similarity = cosine_similarity(wim_embedding_mean.unsqueeze(0), response_embedding_mean.unsqueeze(0))[0].item()
+        # Compute cosine similarity. Dim=0 is for 1D tensors (single sentence embeddings)
+        similarity = torch.nn.functional.cosine_similarity(wim_embedding, response_embedding, dim=0)
 
         return similarity
     
     # Gets the embedding from the model in text
     def _generate_embedding(self, text):
-        # Tokenize input
-        tokenized_input = self.tokenizer.apply_chat_template(
-            text,
-            tokenize=True,
-            add_generation_prompt=True,
-            return_tensors="pt",
-            padding=True
-        ).to("cuda")
+        # Check for embedding model
+        if self.embedding_model:
+            numpy_embedding = self.embedding_model.encode(text)
 
-        # Get embeddings from the model
-        with torch.no_grad():
-            output = self.model(**tokenized_input)
+            # Cast into tensor
+            embedding = torch.tensor(numpy_embedding)
+        else:
+            raise ValueError
 
-        embeddings = output.last_hidden_state
-
-        return embeddings
-        
+        return embedding
 
 # specify how to quantize the model
 cur_quantization_config = BitsAndBytesConfig(
@@ -224,7 +219,7 @@ cur_quantization_config = BitsAndBytesConfig(
 
 # Mixtral model class for ease of use
 class Mixtral(ExpertChat):
-    def __init__(self):
+    def __init__(self, rating=False):
         model_name = "Mixtral"
         model_path = get_working_dir() + '/Models/'
         model_id = model_path + 'Mixtral-8x7B-Instruct-v0.1'
@@ -238,11 +233,11 @@ class Mixtral(ExpertChat):
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
-        super().__init__(model, tokenizer, model_name)
+        super().__init__(model, tokenizer, model_name, rating)
 
 # Llama model class for ease of use
 class Llama(ExpertChat):
-    def __init__(self):
+    def __init__(self, rating=False):
         model_name = "Llama"
         model_path = get_working_dir() + '/Models/'
         model_id = model_path + 'Meta-Llama-3-8B-Instruct'
@@ -256,4 +251,4 @@ class Llama(ExpertChat):
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
-        super().__init__(model, tokenizer, model_name)
+        super().__init__(model, tokenizer, model_name, rating)

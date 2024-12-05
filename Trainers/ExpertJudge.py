@@ -5,7 +5,7 @@ import random
 
 # Custom Judge class
 class WIMJudge(BaseJudge):
-    # Initalizing the model
+    # Initalizing the model. Zeta controls WIM improtance
     def __init__(self, zeta=0.4, model_name='llama'):
         if model_name == 'llama':
             self.model = ExpertChat.Llama
@@ -37,10 +37,10 @@ class WIMJudge(BaseJudge):
             rating_response = self.model.rate_the_expert(single_prompt=prompt["content"], single_response=response["content"])
 
             # Extract info
-            rating = self._extract_rating(rating_response) / 10 # Divide by 10 to get 0->1
+            rating = (self._extract_rating(rating_response) - 5) / 5 # Subtract 5, divide by 5 to get -1 -> 1
             wim = self._extract_WIM(rating_response)
 
-            # Get the cosine similarity of the outputs (0->1)
+            # Get the cosine similarity of the outputs (-1 -> 1)
             similarity = self.model.calculate_cos_similarity(response, wim)
 
             # Weighted reward score function. Zeta controls weight of the similarity
