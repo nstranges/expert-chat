@@ -2,9 +2,9 @@ from trl import OnlineDPOConfig, OnlineDPOTrainer
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from ExpertJudge import WIMJudge
-import ExperChat
+import ExpertChat
 
-llama_path = ExperChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
+llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
 # Model getting trained
 model = AutoModelForCausalLM.from_pretrained(llama_path)
