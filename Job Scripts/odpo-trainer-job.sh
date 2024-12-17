@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
-#SBATCH --time=6:00:00
+#SBATCH --time=18:00:00
 #SBATCH --gres=gpu:4
 #SBATCH --mem-per-gpu=16G
 #SBATCH --cpus-per-task=4

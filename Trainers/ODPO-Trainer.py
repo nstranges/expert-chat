@@ -17,7 +17,13 @@ train_dataset = load_dataset("trl-lib/ultrafeedback-prompt", split="train")
 judge = WIMJudge(model_name='mixtral', zeta=0.4)
 
 # Adjust parameters for different results
-training_args = OnlineDPOConfig(output_dir="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM", logging_steps=10)
+training_args = OnlineDPOConfig(output_dir='/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM', 
+    logging_steps=10,
+    save_total_limit=3,
+    save_steps=50,
+    evaluation_strategy="steps",
+    save_strategy="steps"
+)
 
 trainer = OnlineDPOTrainer(
     model=model, judge=judge, args=training_args, processing_class=tokenizer, train_dataset=train_dataset
