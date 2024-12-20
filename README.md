@@ -2,12 +2,29 @@
 Studying the interaction of LLM models when discussing different topics. Using open-source models in the Hugging Face Transformers library.
 
 ## Overview
-The goal of this project is to analyze the interaction between different AI models and explore ways to fine-tune them for more expert-like communication. The approach is inspired by a bidirectional GAN (Generative Adversarial Network) concept, where each model attempts to convince the other that they are human experts rather than AI. After several interactions, the models rate each other across multiple categories, and these ratings are used to fine-tune them, improving their ability to communicate convincingly. 
+The goal of this project is to analyze the interaction between different AI models and explore ways to fine-tune them for more expert-like communication. The approach is inspired by how human teachers give feedback to students. The teacher model will rate the student model and that rating will be used to improve the student.
 
-Ratings are first determined by a numerical score from 1-10 (10 being high). The second rating metric is a WIM (What Is Missing) response from the judging model. The WIM response will be compared to the actor model's response using cosine similarity to "rate" the knowledge content. The idea is that the actor will try to maximize the knowledge content given in its response. [Online DPO](https://huggingface.co/papers/2402.04792) (Direct Preference Optimization) is used to fine-tune the models based on these rewards.
+Ratings are first determined by a numerical score from 1-10 (10 being high). The second rating metric is a WIM (What Is Missing) response from the judging model. The WIM response will be compared to the student model's response using cosine similarity to "rate" the knowledge content. The idea is that the actor will try to maximize the knowledge content given in its response. [Online DPO](https://huggingface.co/papers/2402.04792) (Direct Preference Optimization) is used to fine-tune the models based on these rewards.
 
 ## Approach
-I created a custom ExpertChat parent class that allows the seamless interaction between two LLMs. Each model has its own child class for model specific parameters. A conversation loops gives a straightforward method to create a topic, create interaction between the models, and rate each model after the conversation. Using the TRL toolkit for training. 
+I created a custom ExpertChat parent class that allows the seamless interaction between two LLMs. Each model has its own child class for model specific parameters. The ExpertChat class is used to create the rating system. A judge in Hugging Face's TRL library is defined to complete the ratings defined above for a prompt only response from the student LLM. There is a hyperparameter $\zeta(s)$ that defines how strong to weight the WIM cosine similarity. Online DPO is performed by the TRL library on the training cluster. Experiments were tracked by Comet.ml because of the restrictions on the Compute Canada clusters.
+
+## Reward Model Overview
+  1. **Adjust Rating Range**:
+    \[
+    \text{rating} = \frac{\text{rating\_response} - 5}{5}
+    \]
+    This adjusts the rating to a range of -1 to 1.
+
+  2. **Calculate Cosine Similarity**:
+    \[
+    \text{similarity} = \text{cos\_similarity}(\text{response}, \text{wim})
+    \]
+
+  3. **Compute Weighted Reward Score**:
+    \[
+    \text{reward} = ((1 - \zeta) \times \text{rating}) + (\zeta \times \text{similarity})
+    \]
 
 ## Models
 
@@ -40,10 +57,8 @@ To work with the models in this project, ensure you're using `git lfs` (Git Larg
       - URL: [all-mpnet-base-v2](https://huggingface.co/sentence-transformers/all-mpnet-base-v2/tree/main)  
       - Clone:  
        ```bash
-       clone https://huggingface.co/sentence-transformers/all-mpnet-base-v2
+       git clone https://huggingface.co/sentence-transformers/all-mpnet-base-v2
        ```
-
-  Note: The job is written to use zip files to speed up GPU load time on the cluster. Make sure to use -r flag.
 
 ## Required Libraries
 
@@ -54,6 +69,7 @@ All dependencies are listed in the `requirements.txt`. The key libraries include
 - Flash Attention (Only on A100 GPUs, not included in current implementation)
 - Huggingface `trl`
 - Sentence Transformers
+- Comet.ml
 
 To install the required packages:
 ```bash
