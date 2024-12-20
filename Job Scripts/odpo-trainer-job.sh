@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
-#SBATCH --time=18:00:00
+#SBATCH --time=48:00:00
 #SBATCH --gres=gpu:4
 #SBATCH --mem-per-gpu=16G
 #SBATCH --cpus-per-task=4
@@ -15,6 +15,7 @@ done
 # Load modules
 module load python/3.11
 module load gcc arrow/17.0.0
+module load httpproxy
 
 # Set distributed environment variables
 export DISABLE_DCGM=1
