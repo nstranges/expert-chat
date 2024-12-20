@@ -30,4 +30,4 @@ EOF
 source $SLURM_TMPDIR/env/bin/activate;
 
 # Launch the training job
-srun accelerate launch --multi_gpu --num_processes=4 --num_machines=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+srun --ntasks=4 accelerate launch --multi_gpu --num_processes=4 --num_machines=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py

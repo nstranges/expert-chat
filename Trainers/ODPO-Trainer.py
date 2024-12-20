@@ -14,12 +14,9 @@ with open('config.json', 'r') as config_file:
 experiment = Experiment(
     api_key=config.get("comet_api_key"),
     project_name=config.get("project_name"),
-    workspace=config.get("workspace")
+    workspace=config.get("workspace"),
+    experiment_key="wim-testing-results"
 )
-
-# Track system info
-experiment.log_system_info()
-experiment.log_system_metrics()
 
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
