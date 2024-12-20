@@ -13,8 +13,8 @@ with open('config.json', 'r') as config_file:
 # Initialize Comet.ml experiment
 experiment = Experiment(
     api_key=config.get("comet_api_key"),
-    project_name="online-dpo",
-    workspace="your_workspace"
+    project_name=config.get("project_name"),
+    workspace=config.get("workspace")
 )
 
 # Track system info
