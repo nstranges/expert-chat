@@ -13,11 +13,14 @@ I created a custom ExpertChat parent class that allows the seamless interaction 
   1. **Adjust Rating Range**:  
     $\text{rating} = \frac{\text{ratingFeedback} - 5}{5}$  
     This adjusts the rating to a range of -1 to 1.
+  2. **Calculate Sentence Embeddings**:  
+     $\text{response} = \text{sentenceEmbedding}(\text{responseText})$  
+     $\text{wim} = \text{sentenceEmbedding}(\text{wimText})$
 
-  3. **Calculate Cosine Similarity**:  
+  4. **Calculate Cosine Similarity**:  
     $\text{similarity} = \text{cosSimilarity}(\text{response}, \text{wim})$
 
-  4. **Compute Weighted Reward Score**:  
+  5. **Compute Weighted Reward Score**:  
     $\text{reward} = ((1 - \zeta) \times \text{rating}) + (\zeta \times \text{similarity})$
 
 ## Models
