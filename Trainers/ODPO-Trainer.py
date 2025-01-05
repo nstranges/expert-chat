@@ -21,6 +21,23 @@ class NoMoveModelWrapper:
     # Forward other attributes
     def __getattr__(self, attr):
         return getattr(self.model, attr)
+    
+# Log metrics during training
+class MetricLoggerCallback(TrainerCallback):
+    def __init__(self, accelerator, experiment):
+        self.accelerator = accelerator
+        self.experiment = experiment
+
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if self.accelerator.is_main_process and self.experiment is not None:
+            self.experiment.log_metrics(
+                {
+                    "train_loss": logs.get("loss", None),
+                    "eval_loss": logs.get("eval_loss", None),
+                    "reward_score": logs.get("reward_score", None),
+                },
+                step=state.global_step,
+            )
 
 # Import accelerate configurations
 accelerator = Accelerator()
@@ -49,7 +66,10 @@ model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torc
 ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
+# Using the model's tokenizer. Setting the padding token if needed
 tokenizer = AutoTokenizer.from_pretrained(llama_path)
+if tokenizer.pad_token_id is None:
+    tokenizer.pad_token_id = tokenizer.eos_token_id
 
 # Standard dataset for prompts
 dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
@@ -67,7 +87,9 @@ training_args = OnlineDPOConfig(
     logging_steps=10,
     save_total_limit=3,
     save_steps=50,
-    save_strategy="steps"
+    save_strategy="steps",
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=4
 )
 
 trainer = OnlineDPOTrainer(
@@ -79,24 +101,7 @@ trainer = OnlineDPOTrainer(
     train_dataset=train_dataset
 )
 
-# Log metrics during training
-class MetricLoggerCallback(TrainerCallback):
-    def __init__(self, accelerator, experiment):
-        self.accelerator = accelerator
-        self.experiment = experiment
-
-    def on_log(self, args, state, control, logs=None, **kwargs):
-        if self.accelerator.is_main_process and self.experiment is not None:
-            self.experiment.log_metrics(
-                {
-                    "train_loss": logs.get("loss", None),
-                    "eval_loss": logs.get("eval_loss", None),
-                    "reward_score": logs.get("reward_score", None),
-                },
-                step=state.global_step,
-            )
-
-# Instantiate the callback and add it to the trainer
+# Adding the logger
 metric_logger = MetricLoggerCallback(accelerator, experiment)
 trainer.add_callback(metric_logger)
 
