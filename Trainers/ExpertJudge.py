@@ -8,9 +8,9 @@ class WIMJudge(BaseJudge):
     # Initalizing the model. Zeta controls WIM improtance
     def __init__(self, zeta=0.4, model_name='llama'):
         if model_name == 'llama':
-            self.model = ExpertChat.Llama
+            self.model = ExpertChat.Llama(rating=True)
         elif model_name == 'mixtral':
-            self.model = ExpertChat.Mixtral
+            self.model = ExpertChat.Mixtral(rating=True)
         else:
             raise ValueError(f"Unsupported model_name '{model_name}'. Valid options are 'llama' or 'mixtral'.")
         

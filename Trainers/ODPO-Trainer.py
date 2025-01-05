@@ -1,47 +1,78 @@
 import json
+import random
 from comet_ml import Experiment
 from trl import OnlineDPOConfig, OnlineDPOTrainer
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
 from ExpertJudge import WIMJudge
 import ExpertChat
+from accelerate import Accelerator
+import torch
+
+# Preventing the ref_model being sent to the GPU from accelerate
+class NoMoveModelWrapper:
+    def __init__(self, model):
+        self.model = model
+
+    # Ignore .to() calls
+    def to(self, *args, **kwargs):
+        return self
+
+    # Forward other attributes
+    def __getattr__(self, attr):
+        return getattr(self.model, attr)
+
+# Import accelerate configurations
+accelerator = Accelerator()
 
 # Get the config.json info
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 
 # Initialize Comet.ml experiment
-experiment = Experiment(
-    api_key=config.get("comet_api_key"),
-    project_name=config.get("project_name"),
-    workspace=config.get("workspace"),
-    experiment_key="wim-testing-results"
-)
+experiment = None
+if accelerator.is_main_process:
+    num_digits = 19
+    experi_num = random.randint(10**(num_digits-1), 10**num_digits - 1)
+    experiment = Experiment(
+        api_key=config.get("comet_api_key"),
+        project_name=config.get("project_name"),
+        workspace=config.get("workspace"),
+        experiment_key="wimTestingResults"+str(experi_num)
+    )
 
+# Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
 
-# Model getting trained
-model = AutoModelForCausalLM.from_pretrained(llama_path)
+# Preventing the ref_model from being created a second time
+ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
+wrapped_ref_model = NoMoveModelWrapper(ref_model)
+
 tokenizer = AutoTokenizer.from_pretrained(llama_path)
 
 # Standard dataset for prompts
-train_dataset = load_dataset("trl-lib/ultrafeedback-prompt", split="train")
+dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
+train_dataset = load_dataset(dataset_path, split="train")
+train_dataset = accelerator.prepare(train_dataset)
 
 # Custom judge for the WIM method
-judge = WIMJudge(model_name='mixtral', zeta=0.4)
+zeta_val = 0.4
+judge = WIMJudge(model_name='mixtral', zeta=zeta_val)
 
 # Adjust parameters for different results
+model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 training_args = OnlineDPOConfig(
-    output_dir='/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM', 
+    output_dir=model_output_dir, 
     logging_steps=10,
     save_total_limit=3,
     save_steps=50,
-    evaluation_strategy="steps",
     save_strategy="steps"
 )
 
 trainer = OnlineDPOTrainer(
     model=model, 
+    ref_model=wrapped_ref_model,
     judge=judge, 
     args=training_args, 
     processing_class=tokenizer, 
@@ -49,12 +80,25 @@ trainer = OnlineDPOTrainer(
 )
 
 # Log metrics during training
-def log_metrics(logs):
-    experiment.log_metrics({
-        "train_loss": logs.get('loss', None),
-        "eval_loss": logs.get('eval_loss', None),
-        "reward_score": logs.get('reward_score', None)
-    }, step=logs.get('step', None))
+class MetricLoggerCallback(TrainerCallback):
+    def __init__(self, accelerator, experiment):
+        self.accelerator = accelerator
+        self.experiment = experiment
 
-trainer.add_callback(log_metrics)
+    def on_log(self, args, state, control, logs=None, **kwargs):
+        if self.accelerator.is_main_process and self.experiment is not None:
+            self.experiment.log_metrics(
+                {
+                    "train_loss": logs.get("loss", None),
+                    "eval_loss": logs.get("eval_loss", None),
+                    "reward_score": logs.get("reward_score", None),
+                },
+                step=state.global_step,
+            )
+
+# Instantiate the callback and add it to the trainer
+metric_logger = MetricLoggerCallback(accelerator, experiment)
+trainer.add_callback(metric_logger)
+
+print("Starting training")
 trainer.train()

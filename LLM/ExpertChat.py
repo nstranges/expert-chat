@@ -219,7 +219,7 @@ cur_quantization_config = BitsAndBytesConfig(
 
 # Mixtral model class for ease of use
 class Mixtral(ExpertChat):
-    def __init__(self, rating=False):
+    def __init__(self, rating=False, gpu_map="auto"):
         model_name = "Mixtral"
         model_path = get_working_dir() + '/Models/'
         model_id = model_path + 'Mixtral-8x7B-Instruct-v0.1'
@@ -229,7 +229,7 @@ class Mixtral(ExpertChat):
             model_id,
             torch_dtype=torch.float16,
             quantization_config=cur_quantization_config,
-            device_map="auto"
+            device_map=gpu_map
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
@@ -237,7 +237,7 @@ class Mixtral(ExpertChat):
 
 # Llama model class for ease of use
 class Llama(ExpertChat):
-    def __init__(self, rating=False):
+    def __init__(self, rating=False, gpu_map="auto"):
         model_name = "Llama"
         model_path = get_working_dir() + '/Models/'
         model_id = model_path + 'Meta-Llama-3-8B-Instruct'
@@ -247,7 +247,7 @@ class Llama(ExpertChat):
             model_id,
             torch_dtype=torch.float16,
             quantization_config=cur_quantization_config,
-            device_map="auto"
+            device_map=gpu_map
         )
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
