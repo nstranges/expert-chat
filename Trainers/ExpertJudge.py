@@ -5,7 +5,7 @@ import random
 
 # Custom Judge class
 class WIMJudge(BaseJudge):
-    # Initalizing the model. Zeta controls WIM improtance
+    # Initalizing the model. Zeta controls WIM importance
     def __init__(self, zeta=0.4, model_name='llama'):
         if model_name == 'llama':
             self.model = ExpertChat.Llama(rating=True)
@@ -18,11 +18,13 @@ class WIMJudge(BaseJudge):
 
     def _extract_rating(self, text):
         pattern = r"\[\[(.*?)\]\]"
-        return re.findall(pattern, text)
+        found = re.findall(pattern, text)
+        return int(found[0])
 
     def _extract_WIM(self, text):
         pattern = r"\[\[\[(.*?)\]\]\]"
-        return re.findall(pattern, text)
+        found = re.findall(pattern, text)
+        return found[0]
         
     # Using the judge function
     def judge(self, prompts, responses, shuffle_order=False):
@@ -32,25 +34,29 @@ class WIMJudge(BaseJudge):
         results = []
 
         # Go through the dataset
-        for prompt, response in zip(prompts, responses):
-            # Get rating from ExpertChat
-            rating_response = self.model.rate_the_expert(single_prompt=prompt["content"], single_response=response["content"])
+        for prompt, response_tup in zip(prompts, responses):
+            better = []
+            for response in response_tup:
+                # Get rating from ExpertChat
+                rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
 
-            # Extract info
-            rating = (self._extract_rating(rating_response) - 5) / 5 # Subtract 5, divide by 5 to get -1 -> 1
-            wim = self._extract_WIM(rating_response)
+                # Extract info
+                try:
+                    rating = (self._extract_rating(rating_response) - 5) / 5 # Subtract 5, divide by 5 to get -1 -> 1
+                    wim = self._extract_WIM(rating_response)
+                except:
+                    continue
 
-            # Get the cosine similarity of the outputs (-1 -> 1)
-            similarity = self.model.calculate_cos_similarity(response, wim)
+                # Get the cosine similarity of the outputs (-1 -> 1)
+                similarity = self.model.calculate_cos_similarity(response, wim)
 
-            # Weighted reward score function. Zeta controls weight of the similarity
-            reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
+                # Weighted reward score function. Zeta controls weight of the similarity
+                reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
 
-            results.append(reward_score)
+                better.append(reward_score)
+
+            # Returning higher index
+            if better:
+                results.append(better.index(max(better)))
 
         return results
-
-
-
-
-

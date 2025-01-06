@@ -9,6 +9,9 @@ import ExpertChat
 from accelerate import Accelerator
 import torch
 
+system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
+                "If the question looks like a completion task, please output the completion only.")
+
 # Preventing the ref_model being sent to the GPU from accelerate
 class NoMoveModelWrapper:
     def __init__(self, model):
@@ -17,6 +20,10 @@ class NoMoveModelWrapper:
     # Ignore .to() calls
     def to(self, *args, **kwargs):
         return self
+    
+    # For forward pass
+    def __call__(self, *args, **kwargs):
+        return self.model(*args, **kwargs)
 
     # Forward other attributes
     def __getattr__(self, attr):
@@ -38,6 +45,13 @@ class MetricLoggerCallback(TrainerCallback):
                 },
                 step=state.global_step,
             )
+
+# This adds a system prompt to all of the prompts
+def add_system_prompt(example):
+    for item in example["prompt"]:
+        if item["role"] == "user":
+            item["content"] = f"{system_prompt}{item['content']}"
+    return example
 
 # Import accelerate configurations
 accelerator = Accelerator()
@@ -71,14 +85,15 @@ tokenizer = AutoTokenizer.from_pretrained(llama_path)
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
-# Standard dataset for prompts
+# Standard dataset for prompts. Including system prompt.
 dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
 train_dataset = load_dataset(dataset_path, split="train")
+train_dataset = train_dataset.map(add_system_prompt)
 train_dataset = accelerator.prepare(train_dataset)
 
 # Custom judge for the WIM method
 zeta_val = 0.4
-judge = WIMJudge(model_name='mixtral', zeta=zeta_val)
+judge = WIMJudge(model_name='llama', zeta=zeta_val)
 
 # Adjust parameters for different results
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
@@ -89,7 +104,8 @@ training_args = OnlineDPOConfig(
     save_steps=50,
     save_strategy="steps",
     per_device_train_batch_size=1,
-    gradient_accumulation_steps=4
+    gradient_accumulation_steps=4,
+    gradient_checkpointing=True
 )
 
 trainer = OnlineDPOTrainer(

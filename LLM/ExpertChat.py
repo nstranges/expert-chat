@@ -133,7 +133,8 @@ class ExpertChat:
                     "(WIM) in their response. This should focus on the specific content and precise information they did not include. Please give this summary "+
                     "by strictly following this format: \"[[[wim]]]\", for example: \"WIM: [[[The response does not detail how Bill C-311 would have interacted "+
                     "with existing provisions in the Criminal Code or explicitly explain the legal basis for claims that it might indirectly affect abortion "+
-                    "rights. It also omits specific examples of cases or statistics that were cited to justify or oppose the bill.]]]\""}
+                    "rights. It also omits specific examples of cases or statistics that were cited to justify or oppose the bill.]]]\". DO NOT SAY ANYTHING ELSE " +
+                    "EXCEPT THE REQUIRED RESPONSE!"}
         
         # Changing chat or judge mode
         if single_prompt and single_response:
