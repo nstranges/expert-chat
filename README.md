@@ -105,6 +105,16 @@ I am using contrastive search as seen in this [blog post](https://huggingface.co
 
 To stay within the Hugging Face toolset, I will be using the TRL library found [here](https://huggingface.co/docs/trl/index).
 
+## Datasets
+
+For initial testing I am using the ultrafeedback-prompt dataset. It is a standard conversational dataset that is used in the TRL examples. Remember to use git lfs.
+
+- URL: [ultrafeedback-prompt](https://huggingface.co/datasets/trl-lib/ultrafeedback-prompt)
+- Clone:  
+ ```bash
+ git clone https://huggingface.co/datasets/trl-lib/ultrafeedback-prompt
+ ```
+
 ## Sentence Transformers
 
 Producing useful embeddings is important to actually tell the model what knowledge is missing. I am using [Sentence Transformers](https://huggingface.co/sentence-transformers) to extract the useful embeddings. These are usually used for semantic search and is more useful than the standard LLM tokenizers.
