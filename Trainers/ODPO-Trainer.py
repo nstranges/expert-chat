@@ -95,6 +95,9 @@ train_dataset = accelerator.prepare(train_dataset)
 zeta_val = 0.4
 judge = WIMJudge(model_name='llama', zeta=zeta_val)
 
+# Adding the logger
+metric_logger = MetricLoggerCallback(accelerator, experiment)
+
 # Adjust parameters for different results
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 training_args = OnlineDPOConfig(
@@ -114,12 +117,9 @@ trainer = OnlineDPOTrainer(
     judge=judge, 
     args=training_args, 
     processing_class=tokenizer, 
-    train_dataset=train_dataset
+    train_dataset=train_dataset,
+    callbacks=[metric_logger]
 )
-
-# Adding the logger
-metric_logger = MetricLoggerCallback(accelerator, experiment)
-trainer.add_callback(metric_logger)
 
 print("Starting training")
 trainer.train()

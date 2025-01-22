@@ -60,7 +60,7 @@ threadpoolctl==3.5.0+computecanada
 tokenizers==0.21.0+computecanada
 torch==2.5.1+computecanada
 tqdm==4.67.1+computecanada
-transformers==4.47.0+computecanada
+transformers==4.46.0+computecanada
 trl==0.12.1+computecanada
 typing_extensions==4.12.2+computecanada
 tyro==0.8.12+computecanada

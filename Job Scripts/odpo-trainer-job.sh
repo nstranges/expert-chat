@@ -2,9 +2,9 @@
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
 #SBATCH --time=01:00:00
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:3
 #SBATCH --ntasks-per-node=1 
-#SBATCH --mem-per-gpu=16G
+#SBATCH --mem-per-gpu=40G
 #SBATCH --mail-user=nstrang2@uwo.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 
