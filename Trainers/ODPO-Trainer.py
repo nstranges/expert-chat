@@ -106,10 +106,11 @@ training_args = OnlineDPOConfig(
     save_total_limit=3,
     save_steps=50,
     save_strategy="steps",
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=4,
-    gradient_checkpointing=True
+    per_device_train_batch_size=4,
 )
+
+    # gradient_accumulation_steps=4,
+    # gradient_checkpointing=True
 
 trainer = OnlineDPOTrainer(
     model=model, 
