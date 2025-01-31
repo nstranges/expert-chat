@@ -74,10 +74,10 @@ if accelerator.is_main_process:
 
 # Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True)
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
 
 # Preventing the ref_model from being created a second time
-ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True)
+ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
@@ -107,8 +107,8 @@ training_args = OnlineDPOConfig(
     save_steps=50,
     save_strategy="steps",
     per_device_train_batch_size=4,
-    # fp16=True,                # Fixing exploading gradients
-    # bf16=False,
+    fp16=True,                # Fixing exploading gradients
+    bf16=False,
 )
 
 trainer = OnlineDPOTrainer(
