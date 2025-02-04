@@ -31,12 +31,11 @@ class NoMoveModelWrapper:
     
 # Log metrics during training
 class MetricLoggerCallback(TrainerCallback):
-    def __init__(self, accelerator, experiment):
-        self.accelerator = accelerator
+    def __init__(self, experiment):
         self.experiment = experiment
 
     def on_log(self, args, state, control, logs=None, **kwargs):
-        if self.accelerator.is_main_process and self.experiment is not None:
+        if self.experiment is not None:
             self.experiment.log_metrics(
                 {
                     "train_loss": logs.get("loss", None),
@@ -53,28 +52,24 @@ def add_system_prompt(example):
             item["content"] = f"{system_prompt}{item['content']}"
     return example
 
-# Import accelerate configurations
-accelerator = Accelerator()
-
 # Get the config.json info
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 
 # Initialize Comet.ml experiment
 experiment = None
-if accelerator.is_main_process:
-    num_digits = 19
-    experi_num = random.randint(10**(num_digits-1), 10**num_digits - 1)
-    experiment = Experiment(
-        api_key=config.get("comet_api_key"),
-        project_name=config.get("project_name"),
-        workspace=config.get("workspace"),
-        experiment_key="wimTestingResults"+str(experi_num)
-    )
+num_digits = 19
+experi_num = random.randint(10**(num_digits-1), 10**num_digits - 1)
+experiment = Experiment(
+    api_key=config.get("comet_api_key"),
+    project_name=config.get("project_name"),
+    workspace=config.get("workspace"),
+    experiment_key="wimTestingResults"+str(experi_num)
+        )
 
 # Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True)
 
 # Preventing the ref_model from being created a second time
 ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
@@ -89,14 +84,13 @@ if tokenizer.pad_token_id is None:
 dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
 train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
-train_dataset = accelerator.prepare(train_dataset)
 
 # Custom judge for the WIM method
 zeta_val = 0.4
 judge = WIMJudge(model_name='llama', zeta=zeta_val)
 
 # Adding the logger
-metric_logger = MetricLoggerCallback(accelerator, experiment)
+metric_logger = MetricLoggerCallback(experiment)
 
 # Adjust parameters for different results
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
@@ -106,8 +100,9 @@ training_args = OnlineDPOConfig(
     save_total_limit=3,
     save_steps=50,
     save_strategy="steps",
-    per_device_train_batch_size=4,
-    fp16=True,                # Fixing exploading gradients
+    per_device_train_batch_size=1,
+    gradient_accumulation_steps=4,
+    fp16=False,                # Accelerate will handle this
     bf16=False,
 )
 

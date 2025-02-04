@@ -2,7 +2,7 @@
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
 #SBATCH --time=01:00:00
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:4
 #SBATCH --ntasks-per-node=1 
 #SBATCH --mem-per-gpu=40G
 #SBATCH --mail-user=nstrang2@uwo.ca
@@ -30,4 +30,4 @@ source $SLURM_TMPDIR/env/bin/activate
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 # Launch the training job
-accelerate launch --num_processes=1 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
