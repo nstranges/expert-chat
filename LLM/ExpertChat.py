@@ -134,7 +134,8 @@ class ExpertChat:
                     "by strictly following this format: \"[[[wim]]]\", for example: \"WIM: [[[The response does not detail how Bill C-311 would have interacted "+
                     "with existing provisions in the Criminal Code or explicitly explain the legal basis for claims that it might indirectly affect abortion "+
                     "rights. It also omits specific examples of cases or statistics that were cited to justify or oppose the bill.]]]\". DO NOT SAY ANYTHING ELSE " +
-                    "EXCEPT THE REQUIRED RESPONSE!"}
+                    "EXCEPT THE REQUIRED RESPONSE! ALWAYS INCLUDE THE RATING IN THE CORRECT BRACKETS. THE RATING MUST NOT HAVE ANYTHING ELSE " +
+                    "OTHER THAN A SINGLE NUMBER. ALWAYS ASSUME THAT THE ANSWER I GIVE IS CORRECT. If you don't have any feedback don't include the wim brackets"}
         
         # Changing chat or judge mode
         if single_prompt and single_response:

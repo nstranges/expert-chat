@@ -40,23 +40,30 @@ class WIMJudge(BaseJudge):
                 # Get rating from ExpertChat
                 rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
 
+                try:
+                    rating = float(self._extract_rating(rating_response) - 5) / 5.0 # Subtract 5, divide by 5 to get -1 -> 1
+                except:
+                    rating = 0
+
                 # Extract info
                 try:
-                    rating = (self._extract_rating(rating_response) - 5) / 5 # Subtract 5, divide by 5 to get -1 -> 1
                     wim = self._extract_WIM(rating_response)
+
+                    # Get the cosine similarity of the outputs (-1 -> 1)
+                    similarity = self.model.calculate_cos_similarity(response, wim)
+
+                    # Weighted reward score function. Zeta controls weight of the similarity
+                    reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
                 except:
-                    continue
-
-                # Get the cosine similarity of the outputs (-1 -> 1)
-                similarity = self.model.calculate_cos_similarity(response, wim)
-
-                # Weighted reward score function. Zeta controls weight of the similarity
-                reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
+                    print(rating_response)
+                    reward_score = rating
 
                 better.append(reward_score)
 
             # Returning higher index
             if better:
-                results.append(better.index(max(better)))
+                best_idx = better.index(max(better))
+                print(best_idx)
+                results.append(best_idx)
 
         return results
