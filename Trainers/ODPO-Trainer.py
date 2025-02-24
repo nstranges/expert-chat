@@ -76,7 +76,7 @@ ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", 
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
-tokenizer = AutoTokenizer.from_pretrained(llama_path)
+tokenizer = AutoTokenizer.from_pretrained(llama_path, padding=True, return_tensors="pt")
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
@@ -102,8 +102,10 @@ training_args = OnlineDPOConfig(
     save_strategy="steps",
     per_device_train_batch_size=1,
     gradient_accumulation_steps=4,
+    gradient_checkpointing=True,
     fp16=False,                # Accelerate will handle this
     bf16=False,
+    deepspeed="ds_config.json",
 )
 
 trainer = OnlineDPOTrainer(
