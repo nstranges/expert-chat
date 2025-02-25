@@ -17,6 +17,7 @@ done
 module load python/3.11
 module load gcc arrow/17.0.0
 module load httpproxy
+module load cuda
 
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
@@ -30,4 +31,4 @@ source $SLURM_TMPDIR/env/bin/activate;
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 # Launch the training job
-accelerate launch --num_processes=1 --mixed_precision=fp16 --deepspeed /home/nstrang2/projects/def-lenck/nstrang2/Code/ds_config.json /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
