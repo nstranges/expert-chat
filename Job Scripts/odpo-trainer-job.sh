@@ -18,6 +18,7 @@ module load python/3.11
 module load gcc arrow/17.0.0
 module load httpproxy
 module load cuda
+module load mpi4py/4.0.0
 
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
