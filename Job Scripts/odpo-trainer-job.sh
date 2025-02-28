@@ -29,7 +29,15 @@ pip install --no-index -r requirements.txt
 # Activate the environment
 source $SLURM_TMPDIR/env/bin/activate;
 
+# GPU settings
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=29500
+export NCCL_DEBUG=INFO
+export NCCL_P2P_DISABLE=1
+export NCCL_IB_DISABLE=1
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+export DS_SKIP_MPI_INIT=1
+export DS_SKIP_HOSTNAME_CHECK=1
 
 # Launch the training job
 accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py

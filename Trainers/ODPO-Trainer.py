@@ -8,6 +8,7 @@ from ExpertJudge import WIMJudge
 import ExpertChat
 from accelerate import Accelerator
 import torch
+import deepspeed_patch # Custom patch for deepspeed hostname -I bug
 
 system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
                 "If the question looks like a completion task, please output the completion only.")
