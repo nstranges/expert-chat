@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=01:00:00
+#SBATCH --time=12:00:00
 #SBATCH --gpus=4
 #SBATCH --ntasks=1
 #SBATCH --mem-per-gpu=40G
@@ -39,5 +39,9 @@ export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export DS_SKIP_MPI_INIT=1
 export DS_SKIP_HOSTNAME_CHECK=1
 
+# Importing python file path
+export PYTHONPATH="/home/nstrang2/projects/def-lenck/nstrang2/Code/:$PYTHONPATH"
+
 # Launch the training job
-accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+deepspeed --num_nodes=1 --num_gpus=4 --master_port=$MASTER_PORT /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+#accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py

@@ -1,12 +1,10 @@
 import os
-import deepspeed.comm as dist
 import subprocess
 from mpi4py import MPI
+import deepspeed.comm as dist
 
+# Custom to fix deepSpeeds bug
 def mpi_discovery(distributed_port=29500, verbose=True):
-    """
-    Custom MPI discovery function to replace DeepSpeed's buggy one.
-    """
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     world_size = comm.Get_size()
@@ -15,7 +13,7 @@ def mpi_discovery(distributed_port=29500, verbose=True):
     if rank == 0:
         import shlex
         try:
-            hostname_cmd = shlex.split("hostname -I")
+            hostname_cmd = shlex.split("hostname -i")
             result = subprocess.check_output(hostname_cmd)
             master_addr = result.decode('utf-8').split()[0]
         except subprocess.CalledProcessError:  # If `hostname -I` fails, use socket fallback
@@ -40,6 +38,5 @@ def mpi_discovery(distributed_port=29500, verbose=True):
     if verbose:
         print(f"[MPI] world_rank={rank}, local_rank={local_rank}, world_size={world_size}, master_addr={master_addr}, master_port={distributed_port}")
 
-# Patch DeepSpeed's function
+# Trying to fix DeepSpeed bug
 dist.mpi_discovery = mpi_discovery
-print("[INFO] DeepSpeed's mpi_discovery() has been patched successfully!")

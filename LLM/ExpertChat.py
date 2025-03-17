@@ -26,6 +26,8 @@ class ExpertChat:
         if rating:
             # Load the embedding model
             self.embedding_model = SentenceTransformer(get_working_dir() + '/Models/all-mpnet-base-v2')
+            if torch.cuda.is_available():
+                self.embedding_model.to("cuda") 
         else:
             self.embedding_model = None
 
@@ -233,6 +235,7 @@ class Mixtral(ExpertChat):
             quantization_config=cur_quantization_config,
             device_map=gpu_map
         )
+
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
         super().__init__(model, tokenizer, model_name, rating)
@@ -251,6 +254,7 @@ class Llama(ExpertChat):
             quantization_config=cur_quantization_config,
             device_map=gpu_map
         )
+
         tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
         super().__init__(model, tokenizer, model_name, rating)
