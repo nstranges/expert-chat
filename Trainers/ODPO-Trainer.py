@@ -71,11 +71,11 @@ experiment = Experiment(
 
 # Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-with deepspeed.zero.Init(enable=True):
+with deepspeed.zero.Init():
     model = AutoModelForCausalLM.from_pretrained(llama_path, torch_dtype=torch.float32)
 
 # Preventing the ref_model from being created a second time
-with deepspeed.zero.Init(enable=True):
+with deepspeed.zero.Init():
     ref_model = AutoModelForCausalLM.from_pretrained(llama_path, torch_dtype=torch.float16)
     wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
