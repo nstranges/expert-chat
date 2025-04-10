@@ -239,18 +239,22 @@ class Mixtral(ExpertChat):
 
 # Llama model class for ease of use
 class Llama(ExpertChat):
-    def __init__(self, rating=False, gpu_map="auto"):
+    # Adding optional model input
+    def __init__(self, rating=False, gpu_map="auto", model=None, tokenizer=None):
         model_name = "Llama"
         model_path = get_working_dir() + '/Models/'
         model_id = model_path + 'Meta-Llama-3-8B-Instruct'
 
-        # Init the Llama model. Half precision model.
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.float16,
-            quantization_config=cur_quantization_config,
-            device_map=gpu_map
-        )
-        tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
+        if model is None:
+            # Init the Llama model. Half precision model.
+            model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                torch_dtype=torch.float16,
+                quantization_config=cur_quantization_config,
+                device_map=gpu_map
+            )
+        
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(model_id, padding_side="left", low_cpu_mem_usage=True)
 
         super().__init__(model, tokenizer, model_name, rating)

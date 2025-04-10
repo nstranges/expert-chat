@@ -85,9 +85,9 @@ dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
 train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
 
-# Custom judge for the WIM method
+# Custom judge for the WIM method. Using the reference model to save memory
 zeta_val = 0.4
-judge = WIMJudge(model_name='llama', zeta=zeta_val)
+judge = WIMJudge(model_name='llama', zeta=zeta_val, model=wrapped_ref_model, tokenizer=tokenizer)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
