@@ -3,7 +3,7 @@ import random
 from comet_ml import Experiment
 from trl import OnlineDPOConfig, OnlineDPOTrainer
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback
+from transformers import AutoModelForCausalLM, AutoTokenizer, TrainerCallback, TrainingArguments
 from ExpertJudge import WIMJudge
 import ExpertChat
 from accelerate import Accelerator
@@ -100,10 +100,11 @@ training_args = OnlineDPOConfig(
     save_total_limit=3,
     save_steps=50,
     save_strategy="steps",
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=4,
+    per_device_train_batch_size=4,
+    gradient_accumulation_steps=8,
     fp16=False,                # Accelerate will handle this
     bf16=False,
+    optim="paged_adamw_8bit",
 )
 
 trainer = OnlineDPOTrainer(
@@ -117,4 +118,4 @@ trainer = OnlineDPOTrainer(
 )
 
 print("Starting training")
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
