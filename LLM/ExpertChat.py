@@ -63,13 +63,15 @@ class ExpertChat:
 
         # Generate new tokens using contrastive search. 
         # Add do sampling without this. This search is not sampled.
-        outputs = self.model.generate(
-            input_ids=tokenized_input,
-            pad_token_id=self.tokenizer.pad_token_id,
-            max_new_tokens=256,
-            penalty_alpha=contrastive_alpha,
-            top_k=contrastive_k
-        )
+        # Added no gradients to prevent memory leak
+        with torch.no_grad():
+            outputs = self.model.generate(
+                input_ids=tokenized_input,
+                pad_token_id=self.tokenizer.pad_token_id,
+                max_new_tokens=256,
+                penalty_alpha=contrastive_alpha,
+                top_k=contrastive_k
+            )
 
         # Decode tokens
         decoded_text = self.tokenizer.batch_decode(
@@ -197,7 +199,7 @@ class ExpertChat:
         # Compute cosine similarity. Dim=0 is for 1D tensors (single sentence embeddings)
         similarity = torch.nn.functional.cosine_similarity(wim_embedding, response_embedding, dim=0)
 
-        return similarity
+        return similarity.item()
     
     # Gets the embedding from the model in text
     def _generate_embedding(self, text):
@@ -205,8 +207,8 @@ class ExpertChat:
         if self.embedding_model:
             numpy_embedding = self.embedding_model.encode(text)
 
-            # Cast into tensor
-            embedding = torch.tensor(numpy_embedding)
+            # Cast into tensor. Putting it on the CPU to reduce GPU memory
+            embedding = torch.tensor(numpy_embedding).cpu().detach()
         else:
             raise ValueError
 
