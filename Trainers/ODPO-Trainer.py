@@ -97,8 +97,8 @@ model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WI
 training_args = OnlineDPOConfig(
     output_dir=model_output_dir, 
     logging_steps=10,
-    save_total_limit=3,
-    save_steps=25,
+    save_total_limit=10,
+    save_steps=10,
     save_strategy="steps",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=8,
@@ -118,4 +118,9 @@ trainer = OnlineDPOTrainer(
 )
 
 print("Starting training")
-trainer.train(resume_from_checkpoint=True)
+try:
+    print("Using checkpoint")
+    trainer.train(resume_from_checkpoint=True)
+except ValueError:
+    print("Starting fresh")
+    trainer.train()
