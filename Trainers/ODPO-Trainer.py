@@ -8,6 +8,7 @@ from ExpertJudge import WIMJudge
 import ExpertChat
 from accelerate import Accelerator
 import torch
+import os
 
 system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
                 "If the question looks like a completion task, please output the completion only.")
@@ -69,10 +70,10 @@ experiment = Experiment(
 
 # Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True)
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True, use_cache=False)
 
 # Preventing the ref_model from being created a second time
-ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float16, low_cpu_mem_usage=True)
+ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
@@ -97,8 +98,8 @@ model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WI
 training_args = OnlineDPOConfig(
     output_dir=model_output_dir, 
     logging_steps=10,
-    save_total_limit=10,
-    save_steps=10,
+    save_total_limit=2,
+    save_steps=100,
     save_strategy="steps",
     per_device_train_batch_size=4,
     gradient_accumulation_steps=8,
@@ -118,9 +119,9 @@ trainer = OnlineDPOTrainer(
 )
 
 print("Starting training")
-try:
+if os.path.isdir(model_output_dir) and any("pytorch_model.bin" in f for f in os.listdir(model_output_dir)):
     print("Using checkpoint")
     trainer.train(resume_from_checkpoint=True)
-except ValueError:
+else:
     print("Starting fresh")
     trainer.train()
