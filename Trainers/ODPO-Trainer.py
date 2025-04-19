@@ -10,6 +10,7 @@ import ExpertChat
 from accelerate import Accelerator
 import torch
 import os
+import gc
 
 system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
                 "If the question looks like a completion task, please output the completion only.")
@@ -47,6 +48,13 @@ class MetricLoggerCallback(TrainerCallback):
                 step=state.global_step,
             )
 
+# Creating a callback to clear the computation graph when the checkpoint is saved
+class ClearCudaCacheCallback(TrainerCallback):
+    def on_save(self, args, state, control, **kwargs):
+        gc.collect()
+        torch.cuda.empty_cache()
+        print(f"[step {state.global_step}] Cleared CUD cache after checkpoint.")
+
 # This adds a system prompt to all of the prompts
 def add_system_prompt(example):
     for item in example["prompt"]:
@@ -71,7 +79,7 @@ experiment = Experiment(
 
 # Model getting trained. Init empty weights for a device map
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.float32, low_cpu_mem_usage=True, use_cache=False)
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
 
 # Preventing the ref_model from being created a second time
 ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
@@ -116,7 +124,7 @@ trainer = OnlineDPOTrainer(
     args=training_args, 
     processing_class=tokenizer, 
     train_dataset=train_dataset,
-    callbacks=[metric_logger]
+    callbacks=[metric_logger, ClearCudaCacheCallback()]
 )
 
 print("Starting training")

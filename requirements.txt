@@ -18,6 +18,7 @@ dulwich==0.22.3+computecanada
 einops==0.8.0+computecanada
 everett==3.1.0+computecanada
 filelock==3.16.1+computecanada
+flash_attn==2.5.7+computecanada
 frozenlist==1.5.0+computecanada
 fsspec==2024.6.1+computecanada
 hjson==3.1.0+computecanada
@@ -61,7 +62,7 @@ six==1.17.0+computecanada
 sympy==1.13.1+computecanada
 threadpoolctl==3.5.0+computecanada
 tokenizers==0.20.0+computecanada
-torch==2.5.1+computecanada
+torch==2.4.1+computecanada
 tqdm==4.67.1+computecanada
 transformers==4.46.3+computecanada
 trl==0.12.1+computecanada
