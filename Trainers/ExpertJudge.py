@@ -6,9 +6,9 @@ import random
 # Custom Judge class
 class WIMJudge(BaseJudge):
     # Initalizing the model. Zeta controls WIM importance
-    def __init__(self, zeta=0.4, model_name='llama'):
+    def __init__(self, zeta=0.4, model_name='llama', model=None, tokenizer=None):
         if model_name == 'llama':
-            self.model = ExpertChat.Llama(rating=True)
+            self.model = ExpertChat.Llama(rating=True, model=model, tokenizer=tokenizer)
         elif model_name == 'mixtral':
             self.model = ExpertChat.Mixtral(rating=True)
         else:

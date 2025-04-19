@@ -1,8 +1,9 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --gpus=4
+#SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --mem-per-gpu=40G
 #SBATCH --mail-user=nstrang2@uwo.ca
@@ -20,6 +21,7 @@ module load httpproxy
 module load cuda
 module load mpi4py/4.0.0
 
+# Run on each node
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 
@@ -29,19 +31,7 @@ pip install --no-index -r requirements.txt
 # Activate the environment
 source $SLURM_TMPDIR/env/bin/activate;
 
-# GPU settings
-export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
-export MASTER_PORT=29500
-export NCCL_DEBUG=INFO
-export NCCL_P2P_DISABLE=1
-export NCCL_IB_DISABLE=1
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
-export DS_SKIP_MPI_INIT=1
-export DS_SKIP_HOSTNAME_CHECK=1
-
-# Importing python file path
-export PYTHONPATH="/home/nstrang2/projects/def-lenck/nstrang2/Code/:$PYTHONPATH"
 
 # Launch the training job
-deepspeed --num_nodes=1 --num_gpus=4 --master_port=$MASTER_PORT /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
-#accelerate launch --num_processes=1 --mixed_precision=fp16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+accelerate launch --num_processes=1 --mixed_precision=bf16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
