@@ -128,7 +128,7 @@ trainer = OnlineDPOTrainer(
 )
 
 print("Starting training")
-if os.path.isdir(model_output_dir) and any("pytorch_model.bin" in f for f in os.listdir(model_output_dir)):
+if os.path.isdir(model_output_dir) and os.listdir(model_output_dir):
     print("Using checkpoint")
     trainer.train(resume_from_checkpoint=True)
 else:

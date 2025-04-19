@@ -139,7 +139,8 @@ class ExpertChat:
                     "with existing provisions in the Criminal Code or explicitly explain the legal basis for claims that it might indirectly affect abortion "+
                     "rights. It also omits specific examples of cases or statistics that were cited to justify or oppose the bill.]]]\". DO NOT SAY ANYTHING ELSE " +
                     "EXCEPT THE REQUIRED RESPONSE! ALWAYS INCLUDE THE RATING IN THE CORRECT BRACKETS. THE RATING MUST NOT HAVE ANYTHING ELSE " +
-                    "OTHER THAN A SINGLE NUMBER. ALWAYS ASSUME THAT THE ANSWER I GIVE IS CORRECT. If you don't have any feedback don't include the wim brackets"}
+                    "OTHER THAN A SINGLE NUMBER. ALWAYS ASSUME THAT THE ANSWER I GIVE IS CORRECT. If you believe there is nothing missing in the response, please leave "+
+                    "the wim response as \"[[[]]]\""}
         
         # Changing chat or judge mode
         if single_prompt and single_response:

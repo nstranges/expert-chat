@@ -49,8 +49,12 @@ class WIMJudge(BaseJudge):
                 try:
                     wim = self._extract_WIM(rating_response)
 
-                    # Get the cosine similarity of the outputs (-1 -> 1)
-                    similarity = self.model.calculate_cos_similarity(response, wim)
+                    # Making a perfectly similar reward if there was no feedback
+                    if wim == '':
+                        similarity = 1
+                    else:
+                        # Get the cosine similarity of the outputs (-1 -> 1)
+                        similarity = self.model.calculate_cos_similarity(response, wim)
 
                     # Weighted reward score function. Zeta controls weight of the similarity
                     reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
