@@ -1,4 +1,3 @@
-#import deepspeedPatch
 import json
 import random
 from comet_ml import Experiment
@@ -14,6 +13,19 @@ import gc
 
 system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
                 "If the question looks like a completion task, please output the completion only.")
+
+# This gets the latest checkpoint number and returns it
+def get_latest_checkpoint(checkpoint_dir):
+    checkpoints = [
+        os.path.join(checkpoint_dir, d)
+        for d in os.listdir(checkpoint_dir)
+        if d.startswith("checkpoint-") and os.path.isdir(os.path.join(checkpoint_dir, d))
+    ]
+    if not checkpoints:
+        return None
+
+    checkpoints.sort(key=lambda x: int(x.split("-")[-1]))
+    return checkpoints[-1]
 
 # Preventing the ref_model being sent to the GPU from accelerate
 class NoMoveModelWrapper:
@@ -77,11 +89,12 @@ experiment = Experiment(
     experiment_key="wimTestingResults"+str(experi_num)
         )
 
-# Model getting trained. Init empty weights for a device map
+# Specifying the path of a potential checkpoint. Might have to load it directly from here first
+zeta_val = 0.4
+model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
 
-# Preventing the ref_model from being created a second time
+# Preventing the ref_model from being created a second time. Ref model is always loaded from the original path
 ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
@@ -90,20 +103,27 @@ tokenizer = AutoTokenizer.from_pretrained(llama_path, padding=True, return_tenso
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
+# Load the latest checkpoint path if available
+if os.path.isdir(model_output_dir) and os.listdir(model_output_dir):
+     llama_path = get_latest_checkpoint(model_output_dir)
+     print("Loading the checkpoint model from: " + llama_path)
+
+# Model getting trained. Init empty weights for a device map
+model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
+
+
 # Standard dataset for prompts. Including system prompt.
 dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
 train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
 
 # Custom judge for the WIM method. Using the reference model to save memory
-zeta_val = 0.4
 judge = WIMJudge(model_name='llama', zeta=zeta_val, model=wrapped_ref_model, tokenizer=tokenizer)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
 
 # Adjust parameters for different results
-model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 training_args = OnlineDPOConfig(
     output_dir=model_output_dir, 
     logging_steps=10,
@@ -134,3 +154,5 @@ if os.path.isdir(model_output_dir) and os.listdir(model_output_dir):
 else:
     print("Starting fresh")
     trainer.train()
+
+model.save_pretrained_merged(model_output_dir+"/done_model", tokenizer)

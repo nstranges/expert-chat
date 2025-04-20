@@ -59,7 +59,7 @@ class WIMJudge(BaseJudge):
                     # Weighted reward score function. Zeta controls weight of the similarity
                     reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
                 except:
-                    print(rating_response)
+                    #print(rating_response)
                     reward_score = rating
 
                 better.append(reward_score)
@@ -67,7 +67,7 @@ class WIMJudge(BaseJudge):
             # Returning higher index
             if better:
                 best_idx = better.index(max(better))
-                print(best_idx)
+                #print(best_idx)
                 results.append(best_idx)
 
         return results
