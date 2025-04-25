@@ -3,7 +3,10 @@ import gc
 from transformers import TrainerCallback, Trainer
 import torch
 import warnings
-from transformers.trainer_utils import OPTIMIZER_NAME, SCHEDULER_NAME, reissue_pt_warnings
+
+# Checkpoint constants
+OPTIMIZER_NAME = "optimizer.pt"
+SCHEDULER_NAME = "scheduler.pt"
 
 # This gets the latest checkpoint number and returns it
 def get_latest_checkpoint(checkpoint_dir):
@@ -58,15 +61,15 @@ class ClearCudaCacheCallback(TrainerCallback):
         torch.cuda.empty_cache()
         print(f"[step {state.global_step}] Cleared CUD cache after checkpoint.")
 
+# Loading the optimizer onto the CPU to prevent OOM errors
 def patched_load_optimizer(self, checkpoint):
-    optimizer_path = os.path.join(checkpoint, OPTIMIZER_NAME)
-    scheduler_path = os.path.join(checkpoint, SCHEDULER_NAME)
+    optimizer_path = os.path.join(checkpoint, "optimizer.pt")
+    scheduler_path = os.path.join(checkpoint, "scheduler.pt")
 
-    # Safely force optimizer + scheduler to load on CPU
-    print(f"Loading optimizer from CPU to avoid GPU OOM...")
+    # Loading the optimizer onto the cpu
     optimizer_state = torch.load(optimizer_path, map_location="cpu")
     self.optimizer.load_state_dict(optimizer_state)
 
-    with warnings.catch_warnings(record=True) as caught_warnings:
-        self.lr_scheduler.load_state_dict(torch.load(scheduler_path, map_location="cpu"))
-    reissue_pt_warnings(caught_warnings)
+    # Loading the state dict if there is one
+    tmp_state_dict = torch.load(scheduler_path, map_location="cpu")
+    self.lr_scheduler.load_state_dict(tmp_state_dict)
