@@ -63,6 +63,10 @@ class ClearCudaCacheCallback(TrainerCallback):
 
 # Loading the optimizer onto the CPU to prevent OOM errors
 def patched_load_optimizer(self, checkpoint):
+    if checkpoint is None:
+        print("Skipping loading optimizer, starting from fresh")
+        return
+    
     optimizer_path = os.path.join(checkpoint, "optimizer.pt")
     scheduler_path = os.path.join(checkpoint, "scheduler.pt")
 
