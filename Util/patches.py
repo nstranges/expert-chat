@@ -74,6 +74,13 @@ def patched_load_optimizer(self, checkpoint):
     optimizer_state = torch.load(optimizer_path, map_location="cpu")
     self.optimizer.load_state_dict(optimizer_state)
 
+    for param_group in self.optimizer.param_groups:
+        for param in param_group['params']:
+            if param in self.optimizer.state:
+                for key, value in self.optimizer.state[param].items():
+                    if isinstance(value, torch.Tensor) and value.device != param.device:
+                        self.optimizer.state[param][key] = value.to(param.device)
+
     # Loading the state dict if there is one
     tmp_state_dict = torch.load(scheduler_path, map_location="cpu")
     self.lr_scheduler.load_state_dict(tmp_state_dict)
