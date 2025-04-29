@@ -11,7 +11,6 @@ charset_normalizer==3.4.0+computecanada
 comet_ml==3.47.1+computecanada
 configobj==5.0.8+computecanada
 datasets==3.0.1+computecanada
-#deepspeed==0.16.0+computecanada
 dill==0.3.8+computecanada
 docstring_parser==0.16+computecanada
 dulwich==0.22.3+computecanada
