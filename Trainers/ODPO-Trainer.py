@@ -9,6 +9,25 @@ import ExpertChat
 import torch
 import os
 from patches import get_latest_checkpoint, NoMoveModelWrapper, MetricLoggerCallback, ClearCudaCacheCallback, patched_load_optimizer
+from peft import LoraConfig, get_peft_model
+
+# Creating the LoRA setup for Llama
+lora_parameters = {
+    'r': 16,
+    'lora_alpha': 16,
+    'target_modules': ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    'lora_dropout': 0.0,
+    'bias': "none",
+    'task_type': "CAUSAL_LM",
+}
+lora_config = LoraConfig(
+    r=lora_parameters['r'],
+    lora_alpha=lora_parameters['lora_alpha'],
+    target_modules=lora_parameters['target_modules'],
+    lora_dropout=lora_parameters['lora_dropout'],
+    bias=lora_parameters['bias'],
+    task_type=lora_parameters['task_type'],
+)
 
 # Fix for improper loading of the optimizer
 Trainer._load_optimizer_and_scheduler = patched_load_optimizer
@@ -60,6 +79,9 @@ if os.path.isdir(model_output_dir) and os.listdir(model_output_dir):
 # Model getting trained. Init empty weights for a device map
 model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
 
+# Wrapping the model with the LoRA config
+model = get_peft_model(model, lora_config)
+model.print_trainable_parameters()
 
 # Standard dataset for prompts. Including system prompt.
 dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'

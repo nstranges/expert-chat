@@ -36,6 +36,7 @@ multiprocess==0.70.16+computecanada
 networkx==3.4.2+computecanada
 ninja==1.11.1+computecanada
 packaging==24.2+computecanada
+peft==0.15.0+computecanada
 pillow==10.4.0+computecanada
 propcache==0.2.1+computecanada
 py_cpuinfo==9.0.0+computecanada
