@@ -81,6 +81,7 @@ model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn
 
 # Wrapping the model with the LoRA config
 model = get_peft_model(model, lora_config)
+model = model.bfloat16() # Casting the LoRA to bfloat
 model.print_trainable_parameters()
 
 # Standard dataset for prompts. Including system prompt.
