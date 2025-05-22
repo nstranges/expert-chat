@@ -62,8 +62,8 @@ zeta_val = 0.4
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
-# Preventing the ref_model from being created a second time. Ref model is always loaded from the original path
-ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
+# Preventing the ref_model from being created a second time. Ref model is always loaded from the original path. Using flash attention on this too.
+ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
@@ -102,7 +102,7 @@ training_args = OnlineDPOConfig(
     save_total_limit=2,
     save_steps=25,
     save_strategy="steps",
-    per_device_train_batch_size=4,
+    per_device_train_batch_size=8,
     gradient_accumulation_steps=8,
     fp16=False,                # Accelerate will handle this
     bf16=False,
