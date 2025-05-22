@@ -58,7 +58,7 @@ experiment = Experiment(
         )
 
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
-zeta_val = 0.4
+zeta_val = 1.0
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
