@@ -127,4 +127,6 @@ else:
     print("Starting fresh")
     trainer.train()
 
-model.save_pretrained_merged(model_output_dir+"/done_model", tokenizer)
+# Saving the LoRA model
+model.save_pretrained(model_output_dir+"/done_model", merge_adapter=True)
+tokenizer.save_pretrained(model_output_dir+"/done_model")
