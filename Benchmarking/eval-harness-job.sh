@@ -16,6 +16,7 @@ done
 
 # Load modules
 module load python/3.11
+module load gcc arrow/17.0.0
 
 # Eval
 cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
@@ -25,14 +26,17 @@ virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 
 pip install --no-index --upgrade pip
+pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
 pip install --no-index -e .[dev]
 
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+export HF_DATASETS_OFFLINE=1
+export HF_HOME="/home/nstrang2/scratch/HFCache"
 
 # Run the evaluation harness
 lm_eval \
   --model hf \
-  --model_args pretrained=/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct, dtype=bfloat16,device=cuda:0 \
-  --tasks ifeval,bbh,math_level5,gpqa,musr,mmlu_pro \
+  --model_args pretrained=/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct \
+  --tasks ifeval,bbh,gpqa,mmlu \
   --batch_size 1 \
   --output_path /home/nstrang2/projects/def-lenck/nstrang2/Evals/Meta-Llama-3-8B-Instruct.json

@@ -16,18 +16,22 @@ done
 
 # Load modules
 module load python/3.11
+module load gcc arrow/17.0.0
+
+cd /home/nstrang2/scratch/Datasets/SWE-bench
 
 # Create and activate environment
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 
 pip install --no-index --upgrade pip
-pip install --no-index transformers datasets accelerate evaluate fire tqdm
+pip install -e .
+#pip install --no-index transformers datasets accelerate evaluate fire tqdm
 
 # Define paths
 MODEL_PATH=/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct
 OUTPUT_DIR=/home/nstrang2/projects/def-lenck/nstrang2/Evals
-DATASET=/home/nstrang2/scratch/Datasets/SWE-bench
+DATASET=/home/nstrang2/scratch/Datasets/SWE-bench_Verified
 
 # inference
 python -m swebench.inference.run_llama \

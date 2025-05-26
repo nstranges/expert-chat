@@ -63,7 +63,7 @@ model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WI
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
 # Preventing the ref_model from being created a second time. Ref model is always loaded from the original path. Using flash attention on this too.
-ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
+ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
