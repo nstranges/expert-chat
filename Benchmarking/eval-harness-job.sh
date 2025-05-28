@@ -30,10 +30,11 @@ pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
 pip install --no-index -e .[dev]
 
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
-export HF_DATASETS_OFFLINE=1
+export HF_DATASETS_OFFLINE="1"
 export HF_HOME="/home/nstrang2/scratch/HFCache"
+export HF_DATASETS_CACHE="/home/nstrang2/scratch/HFCache"
 
-# Run the evaluation harness
+# Run the evaluation harness. Try bbh after getting data
 lm_eval \
   --model hf \
   --model_args pretrained=/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct \
