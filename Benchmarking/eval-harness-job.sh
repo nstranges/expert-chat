@@ -18,12 +18,12 @@ done
 module load python/3.11
 module load gcc arrow/17.0.0
 
-# Eval
-cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
-
 # Set up environment
 virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
+
+# Eval
+cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
 
 pip install --no-index --upgrade pip
 pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
