@@ -27,6 +27,7 @@ cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
 
 pip install --no-index --upgrade pip
 pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
+pip install --no-index langdetect
 pip install --no-index -e .[dev]
 
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
