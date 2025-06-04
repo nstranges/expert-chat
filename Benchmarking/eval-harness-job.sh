@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=20:00:00
+#SBATCH --time=40:00:00
 #SBATCH --gpus=1
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -38,10 +38,14 @@ export HF_DATASETS_OFFLINE="1"
 export HF_HOME="/home/nstrang2/scratch/HFCache"
 export HF_DATASETS_CACHE="/home/nstrang2/scratch/HFCache"
 
-# Run the evaluation harness. Try bbh after getting data
+# Defining the model we are testing
+model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta0.4"
+model_path="/home/nstrang2/scratch/FinishedLLMs/$model_name"
+
+# Run the evaluation harness. Running ifeval, bbh, gpqa, mmlu at different times
 lm_eval \
   --model hf \
-  --model_args pretrained=/home/nstrang2/scratch/Models/Meta-Llama-3-8B-Instruct \
+  --model_args pretrained=$model_path \
   --tasks ifeval,bbh,gpqa,mmlu \
   --batch_size 1 \
-  --output_path /home/nstrang2/projects/def-lenck/nstrang2/Evals/Meta-Llama-3-8B-Instruct.json
+  --output_path /home/nstrang2/projects/def-lenck/nstrang2/Evals/$model_name

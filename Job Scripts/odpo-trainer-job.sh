@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=160:00:00
+#SBATCH --time=145:00:00
 #SBATCH --gpus=4
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

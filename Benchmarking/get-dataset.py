@@ -18,7 +18,7 @@ os.environ["HF_DATASETS_CACHE"] = "/lustre07/scratch/nstrang2/HFCache"
 CACHE_DIR = "/lustre07/scratch/nstrang2/HFCache"
 
 # config
-name = 'Idavidrein/gpqa'
+name = 'hails/mmlu_no_train'
 task_names = get_dataset_config_names(name)
 
 snapshot_download(
