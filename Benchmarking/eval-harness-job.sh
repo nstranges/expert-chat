@@ -39,7 +39,7 @@ export HF_HOME="/home/nstrang2/scratch/HFCache"
 export HF_DATASETS_CACHE="/home/nstrang2/scratch/HFCache"
 
 # Defining the model we are testing
-model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta0.4"
+model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta1.0"
 model_path="/home/nstrang2/scratch/FinishedLLMs/$model_name"
 
 # Run the evaluation harness. Running ifeval, bbh, gpqa, mmlu at different times
