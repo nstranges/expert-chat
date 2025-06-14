@@ -56,6 +56,10 @@ class WIMJudge(BaseJudge):
                         # Get the cosine similarity of the outputs (-1 -> 1)
                         similarity = self.model.calculate_cos_similarity(response, wim)
 
+                    # Printing the two rating systems 
+                    print(f'Rating: {rating}')
+                    print(f'Response: {similarity}')
+
                     # Weighted reward score function. Zeta controls weight of the similarity
                     reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
                 except:

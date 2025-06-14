@@ -89,8 +89,8 @@ dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
 train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
 
-# Custom judge for the WIM method. Using the reference model to save memory
-judge = WIMJudge(model_name='llama', zeta=zeta_val, model=wrapped_ref_model, tokenizer=tokenizer)
+# Custom judge for the WIM method. Using the model being trained to save memory
+judge = WIMJudge(model_name='llama', zeta=zeta_val, model=model, tokenizer=tokenizer)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
@@ -127,6 +127,7 @@ else:
     print("Starting fresh")
     trainer.train()
 
-# Saving the LoRA model
-model.save_pretrained(model_output_dir+"/done_model", merge_adapter=True)
+# Combining both models
+model = model.merge_and_unload()
+model.save_pretrained(model_output_dir+"/done_model")
 tokenizer.save_pretrained(model_output_dir+"/done_model")
