@@ -34,4 +34,4 @@ source $SLURM_TMPDIR/env/bin/activate;
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 
 # Launch the training job
-accelerate launch --num_processes=1 --mixed_precision=bf16 /home/nstrang2/projects/def-lenck/nstrang2/Code/ODPO-Trainer.py
+accelerate launch --num_processes=1 --mixed_precision=bf16 /home/nstrang2/projects/def-lenck/nstrang2/SelfJudge/ODPO-Trainer.py

@@ -59,8 +59,13 @@ experiment = Experiment(
 
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
 zeta_val = 0.0
+using_ref_model = False
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
+
+# Ref model not being using as judge
+if not using_ref_model:
+    model_output_dir += '-selfJudge'
 
 # Preventing the ref_model from being created a second time. Ref model is always loaded from the original path. Using flash attention on this too.
 ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
@@ -90,6 +95,11 @@ train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
 
 # Custom judge for the WIM method. Using the model being trained to save memory
+if using_ref_model:
+    judge_model = wrapped_ref_model
+else:
+    judge_model = model
+    
 judge = WIMJudge(model_name='llama', zeta=zeta_val, model=model, tokenizer=tokenizer)
 
 # Adding the logger
