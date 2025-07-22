@@ -67,10 +67,16 @@ def patched_load_optimizer(self, checkpoint):
         print("Skipping loading optimizer, starting from fresh")
         return
     
-    print("Skipping optimizer loading to avoid device mismatch/OOM")
+    print("Loading optimizer and scheduler on the CPU first.")
     
-    # Loading the sceduler if it exists
+    # Loading the scheduler if it exists
     scheduler_path = os.path.join(checkpoint, "scheduler.pt")
     if os.path.exists(scheduler_path):
         tmp_state_dict = torch.load(scheduler_path, map_location="cpu")
         self.lr_scheduler.load_state_dict(tmp_state_dict)
+
+    # Loading the optimizer if it exists
+    optimizer_path = os.path.join(checkpoint, "optimizer.pt")
+    if os.path.exists(scheduler_path):
+        optimizer_state = torch.load(optimizer_path, map_location="cpu")
+        self.optimizer.load_state_dict(optimizer_state)
