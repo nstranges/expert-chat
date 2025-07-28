@@ -6,7 +6,7 @@ import random
 # Custom Judge class
 class WIMJudge(BaseJudge):
     # Initalizing the model. Zeta controls WIM importance
-    def __init__(self, zeta=0.4, model_name='llama', model=None, tokenizer=None):
+    def __init__(self, zeta=1.0, model_name='llama', model=None, tokenizer=None):
         if model_name == 'llama':
             self.model = ExpertChat.Llama(rating=True, model=model, tokenizer=tokenizer)
         elif model_name == 'mixtral':
@@ -63,7 +63,6 @@ class WIMJudge(BaseJudge):
                     # Weighted reward score function. Zeta controls weight of the similarity
                     reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
                 except:
-                    #print(rating_response)
                     reward_score = rating
 
                 better.append(reward_score)
@@ -71,7 +70,6 @@ class WIMJudge(BaseJudge):
             # Returning higher index
             if better:
                 best_idx = better.index(max(better))
-                #print(best_idx)
                 results.append(best_idx)
 
         return results
