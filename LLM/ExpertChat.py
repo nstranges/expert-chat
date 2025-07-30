@@ -164,10 +164,6 @@ class ExpertChat:
             rating = self._gen_response(tmp_messages)
 
         return rating
-
-        # Save rating
-        # rating_prompt = {"role": "assistant", "content": rating}
-        # self.messages.append(rating_prompt)
     
     # Saving the conversation for future analysis
     def save_conversation(self, saving_path, conv_num):
