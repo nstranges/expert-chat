@@ -100,7 +100,7 @@ if using_ref_model:
 else:
     judge_model = model
     
-judge = WIMJudge(model_name='llama', zeta=zeta_val, model=model, tokenizer=tokenizer)
+judge = WIMJudge(model_name='llama', zeta=zeta_val, model=judge_model, tokenizer=tokenizer)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
