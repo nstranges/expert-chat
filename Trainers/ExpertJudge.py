@@ -38,7 +38,9 @@ class WIMJudge(BaseJudge):
             better = []
             for response in response_tup:
                 # Get rating from ExpertChat
+                print(f'Model Response: {response}')
                 rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
+                print(f'Judge Model Feedback: {rating_response}')
 
                 try:
                     rating = float(self._extract_rating(rating_response) - 5) / 5.0 # Subtract 5, divide by 5 to get -1 -> 1

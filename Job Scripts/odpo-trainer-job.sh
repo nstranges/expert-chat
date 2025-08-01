@@ -10,9 +10,9 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # Wait until DCGM is disabled on the node
-while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
-  sleep 5;
-done
+# while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
+#   sleep 5;
+# done
 
 # Load modules
 module load python/3.11
