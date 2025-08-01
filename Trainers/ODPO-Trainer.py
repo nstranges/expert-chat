@@ -114,6 +114,7 @@ training_args = OnlineDPOConfig(
     save_strategy="steps",
     per_device_train_batch_size=8,
     gradient_accumulation_steps=8,
+    max_new_tokens=512,
     fp16=False,                # Accelerate will handle this
     bf16=False,
     optim="paged_adamw_8bit",
