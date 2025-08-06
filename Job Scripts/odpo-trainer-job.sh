@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --account=def-lenck
 #SBATCH --export=ALL,DISABLE_DCGM=1
-#SBATCH --time=60:00:00
-#SBATCH --gpus=4
+#SBATCH --time=168:00:00
+#SBATCH --gpus=3
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --mem-per-gpu=40G
+#SBATCH --mem-per-gpu=80G
 #SBATCH --mail-user=nstrang2@uwo.ca
 #SBATCH --mail-type=BEGIN,END,FAIL
 

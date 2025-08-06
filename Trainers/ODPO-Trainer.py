@@ -59,7 +59,7 @@ experiment = Experiment(
 
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
 zeta_val = 1.0
-using_ref_model = False
+using_ref_model = True
 model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
@@ -114,7 +114,7 @@ training_args = OnlineDPOConfig(
     save_strategy="steps",
     per_device_train_batch_size=8,
     gradient_accumulation_steps=8,
-    max_new_tokens=512,
+    max_new_tokens=256,
     fp16=False,                # Accelerate will handle this
     bf16=False,
     optim="paged_adamw_8bit",

@@ -36,11 +36,12 @@ class WIMJudge(BaseJudge):
         # Go through the dataset
         for prompt, response_tup in zip(prompts, responses):
             better = []
+            print(f'Prompt: {prompt}')
+
             for response in response_tup:
                 # Get rating from ExpertChat
                 print(f'Model Response: {response}')
                 rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
-                print(f'Judge Model Feedback: {rating_response}')
 
                 try:
                     rating = float(self._extract_rating(rating_response) - 5) / 5.0 # Subtract 5, divide by 5 to get -1 -> 1
@@ -50,6 +51,7 @@ class WIMJudge(BaseJudge):
                 # Extract info
                 try:
                     wim = self._extract_WIM(rating_response)
+                    print(f'Judge Model Feedback: {wim}')
 
                     # Making a perfectly similar reward if there was no feedback
                     if wim == '':
