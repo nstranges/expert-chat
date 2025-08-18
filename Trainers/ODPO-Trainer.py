@@ -1,10 +1,9 @@
 import json
 import random
 from comet_ml import Experiment
-from trl import OnlineDPOConfig, OnlineDPOTrainer
+from trl import OnlineDPOConfig, OnlineDPOTrainer, RandomPairwiseJudge
 from datasets import load_dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer
-from ExpertJudge import WIMJudge
 import ExpertChat
 import torch
 import os
@@ -60,7 +59,7 @@ experiment = Experiment(
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
 zeta_val = 1.0
 using_ref_model = True
-model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
+model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Random'
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
 # Ref model not being using as judge
@@ -100,7 +99,7 @@ if using_ref_model:
 else:
     judge_model = model
     
-judge = WIMJudge(model_name='llama', zeta=zeta_val, model=judge_model, tokenizer=tokenizer)
+judge = RandomPairwiseJudge()
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
