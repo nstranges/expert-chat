@@ -33,7 +33,7 @@ lora_config = LoraConfig(
 Trainer._load_optimizer_and_scheduler = patched_load_optimizer
 
 system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
-                "If the question looks like a completion task, please output the completion only.")
+                "If the question looks like a completion task, please output the completion only. ")
 
 # This adds a system prompt to all of the prompts
 def add_system_prompt(example):
@@ -42,25 +42,29 @@ def add_system_prompt(example):
             item["content"] = f"{system_prompt}{item['content']}"
     return example
 
-# Get the config.json info
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
+# Get the comet_config.json info
+with open('comet_config.json', 'r') as config_file:
+    comet_config = json.load(config_file)
+
+# Get the params_config.json info
+with open('params_config.json', 'r') as config_file:
+    params_config = json.load(config_file)
 
 # Initialize Comet.ml experiment
 experiment = None
 num_digits = 19
 experi_num = random.randint(10**(num_digits-1), 10**num_digits - 1)
 experiment = Experiment(
-    api_key=config.get("comet_api_key"),
-    project_name=config.get("project_name"),
-    workspace=config.get("workspace"),
+    api_key=comet_config.get("comet_api_key"),
+    project_name=comet_config.get("project_name"),
+    workspace=comet_config.get("workspace"),
     experiment_key="wimTestingResults"+str(experi_num)
         )
 
-# Specifying the path of a potential checkpoint. Might have to load it directly from here first
-zeta_val = 1.0
-using_ref_model = True
-model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
+# Specifying the path of a potential checkpoint.
+zeta_val = params_config.get("zeta")
+using_ref_model = params_config.get("using_ref_model")
+model_output_dir = '/home/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
 llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
 
 # Ref model not being using as judge
@@ -109,12 +113,12 @@ metric_logger = MetricLoggerCallback(experiment)
 training_args = OnlineDPOConfig(
     output_dir=model_output_dir, 
     logging_steps=10,
-    save_total_limit=2,
+    save_total_limit=2,  
     save_steps=25,
     save_strategy="steps",
-    per_device_train_batch_size=8,
-    gradient_accumulation_steps=8,
-    max_new_tokens=256,
+    per_device_train_batch_size=params_config.get("per_device_batch_size"),
+    gradient_accumulation_steps=params_config.get("grad_accum_size"),
+    max_new_tokens=params_config.get("max_tokens"),
     fp16=False,                # Accelerate will handle this
     bf16=False,
     optim="paged_adamw_8bit",

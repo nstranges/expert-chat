@@ -10,7 +10,7 @@ def get_working_dir():
         with open('current_directory.txt', 'r') as file:
             path = file.read()
     except FileNotFoundError:
-        path = '/home/nstrang2/scratch'
+        path = '/home/'
 
     return path
 
@@ -66,7 +66,6 @@ class ExpertChat:
         # Generate new tokens using contrastive search. 
         # Add do sampling without this. This search is not sampled.
         # Added no gradients to prevent memory leak
-        # Look into making the pad token the eos tokens
         with torch.no_grad():
             outputs = self.model.generate(
                 input_ids=tokenized_input,

@@ -1,0 +1,7 @@
+{
+    "zeta": 1.0,
+    "using_ref_model": true,
+    "per_device_batch_size": 8,
+    "grad_accum_size": 8,
+    "max_tokens": 256
+}
