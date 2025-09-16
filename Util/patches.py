@@ -2,7 +2,6 @@ import os
 import gc
 from transformers import TrainerCallback, Trainer
 import torch
-import warnings
 
 # Checkpoint constants
 OPTIMIZER_NAME = "optimizer.pt"
