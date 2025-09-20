@@ -18,27 +18,29 @@ os.environ["HF_DATASETS_CACHE"] = "/lustre07/scratch/nstrang2/HFCache"
 CACHE_DIR = "/lustre07/scratch/nstrang2/HFCache"
 
 # config
-name = 'hails/mmlu_no_train'
-task_names = get_dataset_config_names(name)
+names = ['hails/mmlu_no_train', 'lukaemon/bbh', 'google/IFEval', 'Idavidrein/gpqa']
 
-snapshot_download(
-    repo_id=name,
-    repo_type="dataset",
-    cache_dir=CACHE_DIR,
-    local_dir_use_symlinks=False,
-)
+for name in names:
+    task_names = get_dataset_config_names(name)
 
-# all tasks
-all_datasets = {}
-for task in task_names:
-    try:
-        builder = load_dataset(name, name=task, split=None)
-        available_splits = builder.keys()
+    snapshot_download(
+        repo_id=name,
+        repo_type="dataset",
+        cache_dir=CACHE_DIR,
+        local_dir_use_symlinks=False,
+    )
 
-        preferred_split = "test" if "test" in available_splits else "train"
+    # all tasks
+    all_datasets = {}
+    for task in task_names:
+        try:
+            builder = load_dataset(name, name=task, split=None)
+            available_splits = builder.keys()
 
-        dataset = load_dataset(name, name=task, split=preferred_split, cache_dir=CACHE_DIR)
-        print(f"Loaded {task} with split '{preferred_split}' ({len(dataset)} samples).")
+            preferred_split = "test" if "test" in available_splits else "train"
 
-    except Exception as e:
-        print(f"Failed to load task '{task}': {e}")
+            dataset = load_dataset(name, name=task, split=preferred_split, cache_dir=CACHE_DIR)
+            print(f"Loaded {task} with split '{preferred_split}' ({len(dataset)} samples).")
+
+        except Exception as e:
+            print(f"Failed to load task '{task}': {e}")

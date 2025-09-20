@@ -10,9 +10,9 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # Wait until DCGM is disabled on the node
-while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
-  sleep 5;
-done
+# while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
+#   sleep 5;
+# done
 
 # Load modules
 module load python/3.11
@@ -27,11 +27,14 @@ cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
 
 pip install --no-index --upgrade pip
 pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
+pip install --no-index datasets
 pip install --no-index langdetect
 pip install --no-index immutabledict
 pip install --no-index nltk
 pip install --no-index packaging
 pip install --no-index -e .[dev]
+
+python /home/nstrang2/projects/def-lenck/nstrang2/Evals/get-dataset.py
 
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
 export HF_DATASETS_OFFLINE="1"
@@ -39,7 +42,7 @@ export HF_HOME="/home/nstrang2/scratch/HFCache"
 export HF_DATASETS_CACHE="/home/nstrang2/scratch/HFCache"
 
 # Defining the model we are testing
-model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta0.4"
+model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta1.0-RefModel-V2"
 model_path="/home/nstrang2/scratch/FinishedLLMs/$model_name"
 
 # Run the evaluation harness. Running ifeval, bbh, gpqa, mmlu at different times
