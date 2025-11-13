@@ -10,9 +10,9 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # Wait until DCGM is disabled on the node
-while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
-  sleep 5;
-done
+# while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
+#   sleep 5;
+# done
 
 # Load modules
 module load python/3.11
@@ -23,7 +23,7 @@ virtualenv --no-download $SLURM_TMPDIR/env
 source $SLURM_TMPDIR/env/bin/activate
 
 # Eval
-cd /lustre07/scratch/nstrang2/Datasets/lm-evaluation-harness/
+cd /home/nstrang2/scratch/nstrang2/Datasets/lm-evaluation-harness/
 
 pip install --no-index --upgrade pip
 pip install /home/nstrang2/scratch/Libraries/word2number-1.1.zip
@@ -39,7 +39,7 @@ export HF_HOME="/home/nstrang2/scratch/HFCache"
 export HF_DATASETS_CACHE="/home/nstrang2/scratch/HFCache"
 
 # Defining the model we are testing
-model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta1.0"
+model_name="Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta1.0-RefModel-V2"
 model_path="/home/nstrang2/scratch/FinishedLLMs/$model_name"
 
 # Run the evaluation harness. Running ifeval, bbh, gpqa, mmlu at different times

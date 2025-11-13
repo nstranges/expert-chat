@@ -60,29 +60,29 @@ experiment = Experiment(
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
 zeta_val = 1.0
 using_ref_model = True
-model_output_dir = '/home/nstrang2/scratch/Meta-Llama-3-8B-Instruct-OnlineDPO-WIM-Zeta' + str(zeta_val)
-llama_path = ExpertChat.get_working_dir() + '/Models/Meta-Llama-3-8B-Instruct'
+model_output_dir = '/home/nstrang2/scratch/Qwen3-4B-Instruct-2507-OnlineDPO-WIM-Zeta' + str(zeta_val)
+model_path = ExpertChat.get_working_dir() + '/Models/Qwen3-4B-Instruct-2507'
 
 # Ref model not being using as judge
 if not using_ref_model:
     model_output_dir += '-selfJudge'
 
 # Preventing the ref_model from being created a second time. Ref model is always loaded from the original path. Using flash attention on this too.
-ref_model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
+ref_model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype=torch.bfloat16, low_cpu_mem_usage=True, use_cache=False)
 wrapped_ref_model = NoMoveModelWrapper(ref_model)
 
 # Using the model's tokenizer. Setting the padding token if needed
-tokenizer = AutoTokenizer.from_pretrained(llama_path, padding=True, return_tensors="pt")
+tokenizer = AutoTokenizer.from_pretrained(model_path, padding=True, return_tensors="pt")
 if tokenizer.pad_token_id is None:
     tokenizer.pad_token_id = tokenizer.eos_token_id
 
 # Load the latest checkpoint path if available
 if os.path.isdir(model_output_dir) and os.listdir(model_output_dir):
-     llama_path = get_latest_checkpoint(model_output_dir)
-     print("Loading the checkpoint model from: " + llama_path)
+     model_path = get_latest_checkpoint(model_output_dir)
+     print("Loading the checkpoint model from: " + model_path)
 
 # Model getting trained. Init empty weights for a device map
-model = AutoModelForCausalLM.from_pretrained(llama_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
+model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", attn_implementation="flash_attention_2", low_cpu_mem_usage=True, use_cache=False)
 
 # Wrapping the model with the LoRA config
 model = get_peft_model(model, lora_config)

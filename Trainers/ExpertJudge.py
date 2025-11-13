@@ -11,6 +11,8 @@ class WIMJudge(BaseJudge):
             self.model = ExpertChat.Llama(rating=True, model=model, tokenizer=tokenizer)
         elif model_name == 'mixtral':
             self.model = ExpertChat.Mixtral(rating=True)
+        elif model_name == 'qwen':
+            self.model = ExpertChat.Qwen(rating=True, model=model, tokenizer=tokenizer)
         else:
             raise ValueError(f"Unsupported model_name '{model_name}'. Valid options are 'llama' or 'mixtral'.")
         
