@@ -103,7 +103,7 @@ if using_ref_model:
 else:
     judge_model = model
     
-judge = WIMJudge(model_name=params_config.get("judge_model"), zeta=zeta_val, model=judge_model, tokenizer=tokenizer)
+judge = WIMJudge(model_name=params_config.get("judge_model"), zeta=zeta_val, model=judge_model, tokenizer=tokenizer, experiment=experiment)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)

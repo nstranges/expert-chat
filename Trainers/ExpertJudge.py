@@ -6,7 +6,7 @@ import random
 # Custom Judge class
 class WIMJudge(BaseJudge):
     # Initalizing the model. Zeta controls WIM importance
-    def __init__(self, zeta=1.0, model_name='llama', model=None, tokenizer=None):
+    def __init__(self, zeta=1.0, model_name='llama', model=None, tokenizer=None, experiment=None):
         if model_name == 'llama':
             self.model = ExpertChat.Llama(rating=True, model=model, tokenizer=tokenizer)
         elif model_name == 'mixtral':
@@ -17,6 +17,7 @@ class WIMJudge(BaseJudge):
             raise ValueError(f"Unsupported model_name '{model_name}'. Valid options are 'llama' or 'mixtral'.")
         
         self.zeta = zeta
+        self.experiment = experiment
 
     def _extract_rating(self, text):
         pattern = r"\[\[(.*?)\]\]"
@@ -38,11 +39,11 @@ class WIMJudge(BaseJudge):
         # Go through the dataset
         for prompt, response_tup in zip(prompts, responses):
             better = []
-            print(f'Prompt: {prompt}')
+            experiment_text = f'Prompt: {prompt}\n'
 
             for response in response_tup:
                 # Get rating from ExpertChat
-                print(f'Model Response: {response}')
+                experiment_text += f'Model Response: {response}\n'
                 rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
 
                 try:
@@ -53,7 +54,7 @@ class WIMJudge(BaseJudge):
                 # Extract info
                 try:
                     wim = self._extract_WIM(rating_response)
-                    print(f'Judge Model Feedback: {wim}')
+                    experiment_text += f'Judge Model Feedback: {wim}\n'
 
                     # Making a perfectly similar reward if there was no feedback
                     if wim == '':
@@ -63,8 +64,10 @@ class WIMJudge(BaseJudge):
                         similarity = self.model.calculate_cos_similarity(response, wim)
 
                     # Printing the two rating systems 
-                    print(f'Rating: {rating}')
-                    print(f'Response: {similarity}')
+                    experiment_text += f'Rating: {rating}\n'
+                    experiment_text += f'Response: {similarity}\n'
+
+                    self.experiment.log_text(experiment_text)
 
                     # Weighted reward score function. Zeta controls weight of the similarity
                     reward_score = ((1-self.zeta) * rating) + (self.zeta * similarity)
