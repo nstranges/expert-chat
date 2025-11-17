@@ -16,7 +16,7 @@
 
 # Load modules
 module load python/3.11
-module load gcc arrow/17.0.0
+module load gcc arrow/21.0.0
 module load httpproxy
 module load cuda
 module load mpi4py/4.0.0
