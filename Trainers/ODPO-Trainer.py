@@ -46,6 +46,9 @@ def add_system_prompt(example):
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 
+with open('params_config.json', 'r') as config_file:
+    params_config = json.load(config_file)
+
 # Initialize Comet.ml experiment
 experiment = None
 num_digits = 19
@@ -58,10 +61,10 @@ experiment = Experiment(
         )
 
 # Specifying the path of a potential checkpoint. Might have to load it directly from here first
-zeta_val = 1.0
-using_ref_model = True
-model_output_dir = '/home/nstrang2/scratch/Qwen3-4B-Instruct-2507-OnlineDPO-WIM-Zeta' + str(zeta_val)
-model_path = ExpertChat.get_working_dir() + '/Models/Qwen3-4B-Instruct-2507'
+zeta_val = params_config.get("zeta")
+using_ref_model = params_config.get("using_ref_model")
+model_output_dir = '/home/nstrang2/scratch/' + params_config.get("model_name") + '-OnlineDPO-WIM-Zeta' + str(zeta_val)
+model_path = ExpertChat.get_working_dir() + '/Models/' + params_config.get("model_name")
 
 # Ref model not being using as judge
 if not using_ref_model:
@@ -90,7 +93,7 @@ model = model.bfloat16() # Casting the LoRA to bfloat
 model.print_trainable_parameters()
 
 # Standard dataset for prompts. Including system prompt.
-dataset_path = ExpertChat.get_working_dir() + '/Datasets/ultrafeedback-prompt'
+dataset_path = ExpertChat.get_working_dir() + '/Datasets/' + params_config.get("dataset_name")
 train_dataset = load_dataset(dataset_path, split="train")
 train_dataset = train_dataset.map(add_system_prompt)
 
@@ -100,7 +103,7 @@ if using_ref_model:
 else:
     judge_model = model
     
-judge = WIMJudge(model_name='qwen', zeta=zeta_val, model=judge_model, tokenizer=tokenizer)
+judge = WIMJudge(model_name=params_config.get("judge_model"), zeta=zeta_val, model=judge_model, tokenizer=tokenizer)
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)
@@ -112,9 +115,9 @@ training_args = OnlineDPOConfig(
     save_total_limit=2,
     save_steps=25,
     save_strategy="steps",
-    per_device_train_batch_size=8,
-    gradient_accumulation_steps=8,
-    max_new_tokens=256,
+    per_device_train_batch_size=params_config.get("per_device_batch_size"),
+    gradient_accumulation_steps=params_config.get("grad_accum_size"),
+    max_new_tokens=params_config.get("max_tokens"),
     fp16=False,                # Accelerate will handle this
     bf16=False,
     optim="paged_adamw_8bit",
