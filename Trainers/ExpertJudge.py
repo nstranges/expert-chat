@@ -57,7 +57,7 @@ class WIMJudge(BaseJudge):
                     experiment_text += f'Judge Model Feedback: {wim}\n'
 
                     # Making a perfectly similar reward if there was no feedback
-                    if wim == '':
+                    if wim == '' or wim == 'None' or wim == 'none':
                         similarity = 1
                     else:
                         # Get the cosine similarity of the outputs (-1 -> 1)

@@ -74,7 +74,7 @@ tokenizers==0.22.1+computecanada
 torch==2.4.1+computecanada
 tqdm==4.67.1+computecanada
 transformers==4.57.1+computecanada
-trl==0.12.1+computecanada
+trl==0.22.1+computecanada
 typing_extensions==4.15.0+computecanada
 tyro==0.8.12+computecanada
 urllib3==2.5.0+computecanada
