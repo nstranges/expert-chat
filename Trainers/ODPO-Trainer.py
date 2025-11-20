@@ -32,22 +32,25 @@ lora_config = LoraConfig(
 # Fix for improper loading of the optimizer
 Trainer._load_optimizer_and_scheduler = patched_load_optimizer
 
-system_prompt = ("You should answer the question to the best of your abilities and only output the answer. " + 
-                "If the question looks like a completion task, please output the completion only.")
-
-# This adds a system prompt to all of the prompts
-def add_system_prompt(example):
-    for item in example["prompt"]:
-        if item["role"] == "user":
-            item["content"] = f"{system_prompt}{item['content']}"
-    return example
-
 # Get the config.json info
 with open('config.json', 'r') as config_file:
     config = json.load(config_file)
 
 with open('params_config.json', 'r') as config_file:
     params_config = json.load(config_file)
+
+system_prompt = params_config.get("system_prompt")
+
+# This adds a system prompt to all of the prompts
+def add_system_prompt(example):
+    for item in example["prompt"]:
+        if params_config.get("dataset_name") == 'ultrafeedback-prompt':
+            if item["role"] == "user":
+                item["content"] = f"{system_prompt} {item['content']}"
+        else:
+            item = f"{system_prompt} {item}"
+
+    return example
 
 # Initialize Comet.ml experiment
 experiment = None
@@ -103,7 +106,7 @@ if using_ref_model:
 else:
     judge_model = model
     
-judge = WIMJudge(model_name=params_config.get("judge_model"), zeta=zeta_val, model=judge_model, tokenizer=tokenizer, experiment=experiment)
+judge = WIMJudge(model_name=params_config.get("judge_model"), zeta=zeta_val, model=judge_model, tokenizer=tokenizer, experiment=experiment, judge_prompt=params_config.get("judge_prompt"))
 
 # Adding the logger
 metric_logger = MetricLoggerCallback(experiment)

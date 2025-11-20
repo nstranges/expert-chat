@@ -6,5 +6,7 @@
     "max_tokens": 256,
     "judge_model": "qwen",
     "dataset_name": "tldr",
-    "model_name": "Qwen3-4B-Instruct-2507"
+    "model_name": "Qwen3-4B-Instruct-2507",
+    "system_prompt": "Please summarize the content. Your goal is to make the best TLDR (Too Long Didn't Read) summary of this content.",
+    "judge_prompt": "Rate my summarization skills creating the TLDR summary. Consider factors such as the containing all of the important information and summarization quality. The focus should be on the information content of the summary."
 }

@@ -6,7 +6,7 @@ import random
 # Custom Judge class
 class WIMJudge(BaseJudge):
     # Initalizing the model. Zeta controls WIM importance
-    def __init__(self, zeta=1.0, model_name='llama', model=None, tokenizer=None, experiment=None):
+    def __init__(self, zeta=1.0, model_name='llama', model=None, tokenizer=None, experiment=None, judge_prompt=None):
         if model_name == 'llama':
             self.model = ExpertChat.Llama(rating=True, model=model, tokenizer=tokenizer)
         elif model_name == 'mixtral':
@@ -18,6 +18,7 @@ class WIMJudge(BaseJudge):
         
         self.zeta = zeta
         self.experiment = experiment
+        self.judge_prompt = judge_prompt
 
     def _extract_rating(self, text):
         pattern = r"\[\[(.*?)\]\]"
@@ -44,7 +45,7 @@ class WIMJudge(BaseJudge):
             for response in response_tup:
                 # Get rating from ExpertChat
                 experiment_text += f'Model Response: {response}\n'
-                rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response)
+                rating_response = self.model.rate_the_expert(single_prompt=prompt, single_response=response, judge_prompt=self.judge_prompt)
 
                 try:
                     rating = float(self._extract_rating(rating_response) - 5) / 5.0 # Subtract 5, divide by 5 to get -1 -> 1

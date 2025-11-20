@@ -130,10 +130,15 @@ class ExpertChat:
         self.messages = copy.deepcopy(self.original_message)
 
     # Giving the other expert a rating
-    def rate_the_expert(self, single_prompt=None, single_response=None):
-        prompt = {"role": "user", "content": "Rate my conversation and debating skills. Consider factors such as the knowledge, understanding "+
-                    "depth, creativity, and level of detail of the response. Begin your evaluation by providing a short explanation. Be as objective as"+
-                    "possible. The goal is to evaluate the knowledge on this topic. After providing your explanation, please rate the response on a scale of 1 to 10 "+
+    def rate_the_expert(self, single_prompt=None, single_response=None, judge_prompt=None):
+        # Custom judge prompt passed in
+        if judge_prompt is None:
+            judge_prompt = ("Rate my conversation and debating skills. Consider factors such as the knowledge, understanding "+
+                            "depth, creativity, and level of detail of the response.  Be as objective as"+
+                            "possible. The goal is to evaluate the knowledge on this topic.")
+        
+        prompt = {"role": "user", "content": judge_prompt + " Begin your evaluation by providing a short explanation. "+
+                    "After providing your explanation, please rate the response on a scale of 1 to 10 "+
                     "by strictly following this format: \"[[rating]]\", for example: \"Rating: [[5]]\". Next you will provide a 1-2 sentence summary of what is missing "+
                     "(WIM) in their response. This should focus on the specific content and precise information they did not include. Please give this summary "+
                     "by strictly following this format: \"[[[wim]]]\", for example: \"WIM: [[[The response does not detail how Bill C-311 would have interacted "+
